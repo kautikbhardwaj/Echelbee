@@ -1514,4 +1514,24 @@
                 nav.style.boxShadow = 'none';
             }
         });
-    </script>Test Deploy
+    </script>
+
+    <!-- Visitor Tracker — silent, no impact on page load -->
+    <script>
+    (function() {
+        try {
+            fetch('/track.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    page: window.location.pathname + window.location.search,
+                    referrer: document.referrer || ''
+                }),
+                keepalive: true
+            }).catch(function(){});
+        } catch(e) {}
+    })();
+    </script>
+
+</body>
+</html>
