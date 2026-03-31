@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Echelbee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ──────────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:      #040d18;
+  --panel:   #081629;
+  --card:    #0c1f3d;
+  --border:  #142d52;
+  --blue:    #0066ff;
+  --cyan:    #00d4ff;
+  --orange:  #ff6b35;
+  --green:   #00e5a0;
+  --red:     #ff4444;
+  --text:    #ddeeff;
+  --muted:   #4a6a8a;
+  --mono:    'JetBrains Mono', monospace;
+  --sans:    'Syne', sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--panel)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── Screens ───────────────────────────────────────────────────── */
+.screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.screen.hidden{display:none!important}
+
+/* ── Noise overlay ─────────────────────────────────────────────── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:.4;
+}
+
+/* ── LOGIN SCREEN ──────────────────────────────────────────────── */
+#screen-login{
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(0,102,255,.18) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 80% 80%, rgba(0,212,255,.06) 0%, transparent 60%);
+  flex-direction:column;gap:0;
+}
+.login-wrap{
+  width:400px;z-index:1;
+  animation:fadeUp .4s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.login-eyebrow{
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;
+}
+.login-eyebrow::before,.login-eyebrow::after{
+  content:'';flex:1;height:1px;background:var(--border);
+}
+.login-card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;padding:36px;
+  box-shadow:0 0 80px rgba(0,102,255,.1), 0 0 0 1px rgba(0,102,255,.04);
+}
+.login-logo{
+  font-size:24px;font-weight:800;color:#fff;letter-spacing:-.5px;
+  margin-bottom:4px;
+}
+.login-logo em{color:var(--cyan);font-style:normal}
+.login-tagline{font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:28px}
+
+.field{margin-bottom:18px}
+.field label{
+  display:block;font-size:10px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  margin-bottom:7px;
+}
+.field input{
+  width:100%;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-family:var(--mono);font-size:14px;
+  padding:11px 14px;outline:none;transition:border-color .2s, box-shadow .2s;
+  -webkit-appearance:none;
+}
+.field input:focus{
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(0,102,255,.12);
+}
+.field input::placeholder{color:var(--muted)}
+
+/* Password wrapper */
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:42px}
+.pw-toggle{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--muted);
+  font-size:16px;line-height:1;padding:2px;transition:color .2s;
+}
+.pw-toggle:hover{color:var(--text)}
+
+.login-btn{
+  width:100%;padding:13px;
+  background:linear-gradient(135deg, var(--blue) 0%, #0052cc 100%);
+  border:none;border-radius:8px;color:#fff;
+  font-family:var(--sans);font-size:14px;font-weight:700;
+  letter-spacing:.04em;cursor:pointer;
+  transition:transform .15s, box-shadow .2s;
+  box-shadow:0 4px 20px rgba(0,102,255,.3);
+  margin-top:4px;
+}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,102,255,.4)}
+.login-btn:active{transform:translateY(0)}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+.login-err{
+  font-size:12px;font-family:var(--mono);color:var(--red);
+  margin-top:12px;min-height:18px;text-align:center;
+}
+.forgot-link{
+  display:block;text-align:center;margin-top:16px;
+  font-size:12px;font-family:var(--mono);color:var(--muted);
+  cursor:pointer;transition:color .2s;text-decoration:none;
+}
+.forgot-link:hover{color:var(--cyan)}
+
+/* ── FORGOT SCREEN ─────────────────────────────────────────────── */
+#screen-forgot .login-card{text-align:center}
+.forgot-icon{font-size:36px;margin-bottom:16px}
+.forgot-title{font-size:18px;font-weight:700;color:#fff;margin-bottom:8px}
+.forgot-desc{font-size:13px;font-family:var(--mono);color:var(--muted);line-height:1.6;margin-bottom:24px}
+.forgot-desc strong{color:var(--cyan)}
+.send-btn{
+  width:100%;padding:12px;background:var(--card);
+  border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:var(--mono);font-size:13px;
+  cursor:pointer;transition:all .2s;margin-bottom:10px;
+}
+.send-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.back-link{
+  font-size:12px;font-family:var(--mono);color:var(--muted);
+  cursor:pointer;transition:color .2s;
+}
+.back-link:hover{color:var(--text)}
+.success-msg{
+  font-size:12px;font-family:var(--mono);color:var(--green);
+  margin-top:10px;min-height:18px;
+}
+
+/* ── APP LAYOUT ────────────────────────────────────────────────── */
+#screen-app{
+  flex-direction:column;align-items:stretch;justify-content:flex-start;
+  overflow:hidden;
+}
+
+/* ── TOPBAR ─────────────────────────────────────────────────────── */
+.topbar{
+  height:54px;background:var(--panel);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;flex-shrink:0;position:relative;z-index:10;
+}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.tb-logo{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.tb-logo em{color:var(--cyan);font-style:normal}
+.tb-tag{
+  font-size:10px;font-family:var(--mono);color:var(--muted);
+  background:var(--card);border:1px solid var(--border);
+  padding:3px 9px;border-radius:20px;letter-spacing:.06em;
+}
+.topbar-right{display:flex;align-items:center;gap:14px}
+.live-dot{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;font-family:var(--mono);color:var(--green);
+}
+.live-dot::before{
+  content:'';width:6px;height:6px;border-radius:50%;background:var(--green);
+  animation:blink 2s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 6px var(--green)}50%{opacity:.3;box-shadow:none}}
+.refresh-btn{
+  background:var(--card);border:1px solid var(--border);border-radius:6px;
+  color:var(--muted);font-family:var(--mono);font-size:11px;
+  padding:5px 11px;cursor:pointer;transition:all .2s;
+}
+.refresh-btn:hover{border-color:var(--blue);color:var(--text)}
+.logout-btn{
+  background:transparent;border:1px solid var(--border);border-radius:6px;
+  color:var(--muted);font-family:var(--mono);font-size:11px;
+  padding:5px 11px;cursor:pointer;transition:all .2s;
+}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* ── MAIN CONTENT ──────────────────────────────────────────────── */
+.main{flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:18px}
+
+/* ── STAT CARDS ────────────────────────────────────────────────── */
+.stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.stat{
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;
+  padding:16px;position:relative;overflow:hidden;
+}
+.stat::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:var(--blue);opacity:.4;
+}
+.stat.c .stat-n{color:var(--cyan)}   .stat.c::after{background:var(--cyan)}
+.stat.o .stat-n{color:var(--orange)} .stat.o::after{background:var(--orange)}
+.stat.g .stat-n{color:var(--green)}  .stat.g::after{background:var(--green)}
+.stat.r .stat-n{color:#a78bfa}       .stat.r::after{background:#a78bfa}
+.stat.y .stat-n{color:#fbbf24}       .stat.y::after{background:#fbbf24}
+.stat-l{font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}
+.stat-n{font-size:24px;font-weight:800;color:#fff;line-height:1}
+.stat-s{font-size:10px;font-family:var(--mono);color:var(--muted);margin-top:3px}
+
+/* ── GRID 3-col ─────────────────────────────────────────────────── */
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid2{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+
+/* ── PANEL ──────────────────────────────────────────────────────── */
+.pnl{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;overflow:hidden}
+.pnl-t{
+  font-size:10px;font-family:var(--mono);text-transform:uppercase;
+  letter-spacing:.1em;color:var(--muted);
+  padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid var(--border);
+}
+
+/* ── DAILY CHART ─────────────────────────────────────────────────── */
+.chart{height:80px;display:flex;align-items:flex-end;gap:2px;padding-top:4px}
+.cb{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  gap:4px;position:relative;
+}
+.cb-bar{
+  width:100%;background:rgba(0,102,255,.5);border-radius:2px 2px 0 0;
+  min-height:2px;transition:background .2s;cursor:default;
+}
+.cb:hover .cb-bar{background:var(--cyan)}
+.cb-tip{
+  position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:var(--card);border:1px solid var(--border);border-radius:5px;
+  padding:4px 8px;font-size:10px;font-family:var(--mono);color:var(--cyan);
+  white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:20;
+}
+.cb:hover .cb-tip{opacity:1}
+.cb-lbl{font-size:8px;font-family:var(--mono);color:var(--muted)}
+
+/* ── HOURLY CHART (today) ───────────────────────────────────────── */
+.hourly-chart{height:50px;display:flex;align-items:flex-end;gap:2px}
+.hb{flex:1;background:rgba(0,229,160,.3);border-radius:1px 1px 0 0;min-height:1px;transition:background .2s;cursor:default;position:relative}
+.hb:hover{background:var(--green)}
+.hb-tip{
+  position:absolute;bottom:calc(100%+4px);left:50%;transform:translateX(-50%);
+  background:var(--card);border:1px solid var(--border);border-radius:4px;
+  padding:3px 6px;font-size:10px;font-family:var(--mono);color:var(--green);
+  white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:20;
+}
+.hb:hover .hb-tip{opacity:1}
+
+/* ── BAR LIST ────────────────────────────────────────────────────── */
+.bar-list{display:flex;flex-direction:column;gap:7px}
+.bi{display:flex;align-items:center;gap:8px}
+.bi-lbl{font-size:11px;font-family:var(--mono);color:var(--text);min-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bi-track{flex:1;height:5px;background:var(--card);border-radius:3px;overflow:hidden}
+.bi-fill{height:100%;border-radius:3px;transition:width .7s ease}
+.bi-fill.blue{background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.bi-fill.orange{background:linear-gradient(90deg,var(--orange),#ffaa00)}
+.bi-cnt{font-size:10px;font-family:var(--mono);color:var(--muted);min-width:28px;text-align:right}
+
+/* ── DEVICE BREAKDOWN ──────────────────────────────────────────── */
+.dev-list{display:flex;flex-direction:column;gap:12px}
+.dev-item{display:flex;align-items:center;gap:10px}
+.dev-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dev-name{font-size:12px;font-family:var(--mono);flex:1}
+.dev-bar{flex:2;height:5px;background:var(--card);border-radius:3px;overflow:hidden}
+.dev-fill{height:100%;border-radius:3px;transition:width .7s ease}
+.dev-pct{font-size:11px;font-family:var(--mono);color:var(--muted);min-width:34px;text-align:right}
+
+/* ── TABLE SECTION ──────────────────────────────────────────────── */
+.tbl-section{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.tbl-hd{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  flex-wrap:wrap;gap:8px;
+}
+.tbl-title{font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.tbl-ctrl{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tbl-ctrl input[type=text]{
+  background:var(--card);border:1px solid var(--border);border-radius:6px;
+  color:var(--text);font-family:var(--mono);font-size:12px;
+  padding:6px 10px;outline:none;width:200px;transition:border .2s;
+}
+.tbl-ctrl input[type=text]:focus{border-color:var(--blue)}
+.tbl-ctrl input[type=date]{
+  background:var(--card);border:1px solid var(--border);border-radius:6px;
+  color:var(--muted);font-family:var(--mono);font-size:11px;
+  padding:6px 8px;outline:none;transition:border .2s;
+}
+.tbl-ctrl input[type=date]:focus{border-color:var(--blue);color:var(--text)}
+.btn-sm{
+  background:var(--blue);border:none;border-radius:6px;color:#fff;
+  font-family:var(--mono);font-size:11px;padding:6px 12px;cursor:pointer;transition:background .2s;
+}
+.btn-sm:hover{background:#0052cc}
+.btn-sm.ghost{background:var(--card);border:1px solid var(--border);color:var(--muted)}
+.btn-sm.ghost:hover{border-color:var(--muted);color:var(--text)}
+.btn-sm.danger{background:rgba(255,68,68,.15);border:1px solid rgba(255,68,68,.3);color:var(--red)}
+.btn-sm.danger:hover{background:rgba(255,68,68,.25)}
+
+.tbl-wrap{overflow-x:auto;max-height:400px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:11px;font-family:var(--mono)}
+thead th{
+  position:sticky;top:0;background:var(--card);z-index:5;
+  padding:9px 12px;text-align:left;font-size:9px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+tbody tr{border-bottom:1px solid rgba(20,45,82,.7);transition:background .15s}
+tbody tr:hover{background:rgba(0,102,255,.05)}
+tbody td{padding:9px 12px;vertical-align:middle;white-space:nowrap}
+.ip{color:var(--cyan);font-weight:500}
+.pg{color:var(--orange);max-width:140px;overflow:hidden;text-overflow:ellipsis;display:inline-block}
+.tm{color:var(--muted);font-size:10px}
+.muted{color:var(--muted)}
+.bdg{display:inline-block;padding:2px 7px;border-radius:3px;font-size:9px;font-weight:600;letter-spacing:.04em}
+.bdg-d{background:rgba(0,102,255,.15);color:#6699ff}
+.bdg-m{background:rgba(255,107,53,.15);color:var(--orange)}
+.bdg-t{background:rgba(0,212,255,.15);color:var(--cyan)}
+
+.pagination{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-top:1px solid var(--border);
+}
+.pg-info{font-size:10px;font-family:var(--mono);color:var(--muted)}
+.pg-btns{display:flex;gap:5px}
+.pg-btn{
+  background:var(--card);border:1px solid var(--border);border-radius:5px;
+  color:var(--text);font-family:var(--mono);font-size:10px;
+  padding:4px 10px;cursor:pointer;transition:all .15s;
+}
+.pg-btn:hover:not(:disabled){background:var(--border)}
+.pg-btn:disabled{opacity:.25;cursor:not-allowed}
+
+/* ── Loading / Empty ─────────────────────────────────────────────── */
+.loading-row{
+  text-align:center;padding:32px;
+  font-family:var(--mono);font-size:12px;color:var(--muted);
+}
+.loading-row::after{content:'...';animation:ldots 1.2s steps(4,end) infinite}
+@keyframes ldots{0%,20%{content:''}40%{content:'.'}60%{content:'..'}80%,100%{content:'...'}}
+
+/* ── Toast ────────────────────────────────────────────────────────── */
+#toast{
+  position:fixed;bottom:20px;right:20px;z-index:9999;
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:10px 18px;font-family:var(--mono);font-size:12px;color:var(--cyan);
+  opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none;
+}
+#toast.on{opacity:1;transform:translateY(0)}
+#toast.err{color:var(--red);border-color:rgba(255,68,68,.3)}
+#toast.ok{color:var(--green);border-color:rgba(0,229,160,.3)}
+
+/* ── Responsive tweaks ───────────────────────────────────────────── */
+@media(max-width:1200px){.stats-row{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){.grid3,.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LOGIN SCREEN
+═══════════════════════════════════════════════════════════════════ -->
+<div id="screen-login" class="screen">
+  <div class="login-wrap">
+    <div class="login-eyebrow">Secure Admin Access</div>
+    <div class="login-card">
+      <div class="login-logo">Ech El <em>Bee</em></div>
+      <div class="login-tagline">// visitor analytics dashboard</div>
+
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="l-user" placeholder="Enter username" autocomplete="username" spellcheck="false">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="l-pass" placeholder="••••••••••" autocomplete="current-password">
+          <button class="pw-toggle" type="button" onclick="togglePw()" id="pw-eye" title="Show/hide password">👁</button>
+        </div>
+      </div>
+
+      <button class="login-btn" id="login-btn" onclick="doLogin()">Sign In →</button>
+      <div class="login-err" id="l-err"></div>
+      <a class="forgot-link" onclick="showForgot()">Forgot password?</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FORGOT PASSWORD SCREEN
+═══════════════════════════════════════════════════════════════════ -->
+<div id="screen-forgot" class="screen hidden">
+  <div class="login-wrap">
+    <div class="login-eyebrow">Password Reset</div>
+    <div class="login-card">
+      <div class="forgot-icon">🔐</div>
+      <div class="forgot-title">Reset Admin Password</div>
+      <div class="forgot-desc">
+        Login credentials will be sent to<br>
+        <strong>support@echelbee.in</strong>
+      </div>
+      <button class="send-btn" id="send-reset-btn" onclick="sendReset()">Send Reset Email</button>
+      <div class="success-msg" id="reset-msg"></div>
+      <a class="back-link" onclick="showLogin()">← Back to login</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     APP SCREEN
+═══════════════════════════════════════════════════════════════════ -->
+<div id="screen-app" class="screen hidden">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="tb-logo">Ech El <em>Bee</em></div>
+      <div class="tb-tag">Admin · Analytics</div>
+    </div>
+    <div class="topbar-right">
+      <div class="live-dot">Live</div>
+      <div id="last-refreshed" style="font-size:10px;font-family:var(--mono);color:var(--muted)"></div>
+      <button class="refresh-btn" onclick="loadData(curPage)">↻ Refresh</button>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="main-content">
+
+    <!-- STATS -->
+    <div class="stats-row" id="stats-row">
+      <div class="loading-row" style="grid-column:1/-1">Loading</div>
+    </div>
+
+    <!-- TODAY HOURLY + DAILY CHART -->
+    <div class="grid2" id="charts-row">
+      <div class="loading-row" style="grid-column:1/-1">Loading charts</div>
+    </div>
+
+    <!-- COUNTRIES + PAGES + DEVICES -->
+    <div class="grid3" id="breakdown-row">
+      <div class="loading-row" style="grid-column:1/-1">Loading breakdown</div>
+    </div>
+
+    <!-- VISITOR TABLE -->
+    <div class="tbl-section">
+      <div class="tbl-hd">
+        <div class="tbl-title">Visitor Logs</div>
+        <div class="tbl-ctrl">
+          <input type="date" id="f-from" title="From">
+          <input type="date" id="f-to" title="To">
+          <input type="text" id="f-search" placeholder="IP, city, page, browser…"
+            onkeyup="if(event.key==='Enter')applyFilter()">
+          <button class="btn-sm" onclick="applyFilter()">Filter</button>
+          <button class="btn-sm ghost" onclick="clearFilter()">Clear</button>
+          <button class="btn-sm danger" onclick="confirmPurge()">Purge All</button>
+        </div>
+      </div>
+      <div class="tbl-wrap" id="tbl-wrap">
+        <div class="loading-row">Loading visitors</div>
+      </div>
+      <div class="pagination" id="pagination" style="display:none"></div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /screen-app -->
+
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────
+const API      = '/admin_api.php';
+const LS_KEY   = 'eb_adm_tok';
+let   TOKEN    = localStorage.getItem(LS_KEY) || '';
+let   curPage  = 0;
+const PAGE_SZ  = 100;
+let   totalRows = 0;
+let   fFrom = '', fTo = '', fSearch = '';
+let   refreshTimer = null;
+
+// ── Screen helpers ────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+function show(id)  { $(id).classList.remove('hidden') }
+function hide(id)  { $(id).classList.add('hidden') }
+function showLogin()  { show('screen-login');  hide('screen-forgot'); hide('screen-app') }
+function showForgot() { show('screen-forgot'); hide('screen-login');  hide('screen-app') }
+function showApp()    { show('screen-app');    hide('screen-login');  hide('screen-forgot') }
+
+// ── Toast ─────────────────────────────────────────────────────────
+function toast(msg, type='') {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'on ' + type;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = '', 3000);
+}
+
+// ── Password toggle ───────────────────────────────────────────────
+function togglePw() {
+  const inp = $('l-pass');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────
+async function doLogin() {
+  const btn  = $('login-btn');
+  const err  = $('l-err');
+  const user = $('l-user').value.trim();
+  const pass = $('l-pass').value;
+  err.textContent = '';
+  if (!user || !pass) { err.textContent = '⚠ Username and password required'; return; }
+
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    const r = await fetch(`${API}?action=login`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username: user, password: pass })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.token) {
+      err.textContent = '✕ ' + (d.error || 'Login failed');
+      btn.disabled = false; btn.textContent = 'Sign In →';
+      return;
+    }
+    TOKEN = d.token;
+    localStorage.setItem(LS_KEY, TOKEN);
+    showApp();
+    loadData(0);
+    startAutoRefresh();
+  } catch(e) {
+    err.textContent = '✕ Network error — check connection';
+    btn.disabled = false; btn.textContent = 'Sign In →';
+  }
+}
+$('l-pass').addEventListener('keyup', e => { if (e.key === 'Enter') doLogin() });
+$('l-user').addEventListener('keyup', e => { if (e.key === 'Enter') $('l-pass').focus() });
+
+// ── LOGOUT ────────────────────────────────────────────────────────
+async function doLogout() {
+  if (TOKEN) {
+    await fetch(`${API}?action=logout`, {
+      method:'POST', headers:{'X-Admin-Token': TOKEN}
+    }).catch(()=>{});
+  }
+  TOKEN = ''; localStorage.removeItem(LS_KEY);
+  clearTimeout(refreshTimer);
+  showLogin();
+  $('login-btn').disabled = false; $('login-btn').textContent = 'Sign In →';
+  $('l-user').value = ''; $('l-pass').value = '';
+}
+
+// ── FORGOT PASSWORD ───────────────────────────────────────────────
+async function sendReset() {
+  const btn = $('send-reset-btn');
+  const msg = $('reset-msg');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  msg.textContent = '';
+  try {
+    const r = await fetch(`${API}?action=forgot`, { method:'POST' });
+    const d = await r.json();
+    if (d.ok) {
+      msg.textContent = '✓ ' + d.message;
+      msg.style.color = 'var(--green)';
+    } else {
+      msg.textContent = '✕ ' + d.message;
+      msg.style.color = 'var(--red)';
+      btn.disabled = false; btn.textContent = 'Send Reset Email';
+    }
+  } catch(e) {
+    msg.textContent = '✕ Network error';
+    msg.style.color = 'var(--red)';
+    btn.disabled = false; btn.textContent = 'Send Reset Email';
+  }
+}
+
+// ── LOAD DATA ─────────────────────────────────────────────────────
+async function loadData(page = 0) {
+  curPage = page;
+  const params = new URLSearchParams({
+    action: 'data', limit: PAGE_SZ, offset: page * PAGE_SZ,
+    ...(fFrom   ? {from: fFrom}     : {}),
+    ...(fTo     ? {to: fTo}         : {}),
+    ...(fSearch ? {search: fSearch} : {}),
+  });
+  try {
+    const r = await fetch(`${API}?${params}`, {
+      headers: {'X-Admin-Token': TOKEN}
+    });
+    if (r.status === 401) { doLogout(); return; }
+    const d = await r.json();
+    totalRows = d.total_rows || 0;
+    renderStats(d.stats);
+    renderCharts(d.daily, d.hourly);
+    renderBreakdown(d.top_countries, d.top_pages, d.devices);
+    renderTable(d.logs);
+    renderPagination();
+    $('last-refreshed').textContent = 'Updated ' + now();
+  } catch(e) { toast('Failed to load data', 'err') }
+}
+
+function applyFilter() {
+  fFrom = $('f-from').value; fTo = $('f-to').value;
+  fSearch = $('f-search').value.trim();
+  loadData(0);
+}
+function clearFilter() {
+  fFrom = fTo = fSearch = '';
+  $('f-from').value = ''; $('f-to').value = ''; $('f-search').value = '';
+  loadData(0);
+}
+
+// ── AUTO REFRESH every 60s ────────────────────────────────────────
+function startAutoRefresh() {
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => { if (TOKEN) loadData(curPage) }, 60000);
+}
+
+// ── RENDER STATS ──────────────────────────────────────────────────
+function renderStats(s) {
+  if (!s) return;
+  $('stats-row').innerHTML = `
+    <div class="stat">   <div class="stat-l">Total Visits</div>  <div class="stat-n">${N(s.total_visits)}</div></div>
+    <div class="stat c"> <div class="stat-l">Unique IPs</div>    <div class="stat-n">${N(s.unique_ips)}</div></div>
+    <div class="stat o"> <div class="stat-l">Countries</div>     <div class="stat-n">${N(s.countries)}</div></div>
+    <div class="stat g"> <div class="stat-l">Today</div>         <div class="stat-n">${N(s.today)}</div></div>
+    <div class="stat r"> <div class="stat-l">Last 7 Days</div>   <div class="stat-n">${N(s.last_7d)}</div></div>
+    <div class="stat y"> <div class="stat-l">Last 30 Days</div>  <div class="stat-n">${N(s.last_30d)}</div></div>
+  `;
+}
+
+// ── RENDER CHARTS ─────────────────────────────────────────────────
+function renderCharts(daily, hourly) {
+  const dailyData = (daily || []).slice(-30);
+  const maxD = Math.max(...dailyData.map(d => +d.visits), 1);
+  const dailyBars = dailyData.map(d => {
+    const h = Math.max(3, Math.round((+d.visits / maxD) * 74));
+    const lbl = d.date ? d.date.slice(5) : '';
+    return `<div class="cb">
+      <div class="cb-tip">${d.date} · ${d.visits} visits</div>
+      <div class="cb-bar" style="height:${h}px"></div>
+      <div class="cb-lbl">${lbl}</div>
+    </div>`;
+  }).join('');
+
+  // Hourly — fill all 24h
+  const hourMap = {};
+  (hourly || []).forEach(h => { hourMap[+h.hour] = +h.visits; });
+  const maxH = Math.max(...Object.values(hourMap), 1);
+  const hourlyBars = Array.from({length:24},(_,i) => {
+    const v = hourMap[i] || 0;
+    const h = Math.max(1, Math.round((v / maxH) * 44));
+    return `<div class="hb" style="height:${h}px">
+      <div class="hb-tip">${String(i).padStart(2,'0')}:00 · ${v}</div>
+    </div>`;
+  }).join('');
+
+  $('charts-row').innerHTML = `
+    <div class="pnl">
+      <div class="pnl-t">Daily Visits — Last 30 Days</div>
+      <div class="chart">${dailyBars || '<span style="color:var(--muted);font-size:11px;font-family:var(--mono)">No data yet</span>'}</div>
+    </div>
+    <div class="pnl">
+      <div class="pnl-t">Today by Hour</div>
+      <div class="hourly-chart">${hourlyBars}</div>
+      <div style="font-size:9px;font-family:var(--mono);color:var(--muted);margin-top:6px">
+        00:00 ──────────────────────── 23:00
+      </div>
+    </div>
+  `;
+}
+
+// ── RENDER BREAKDOWN ──────────────────────────────────────────────
+function renderBreakdown(countries, pages, devices) {
+  const maxC = Math.max(...(countries||[]).map(c => +c.visits), 1);
+  const maxP = Math.max(...(pages||[]).map(p => +p.visits), 1);
+  const devTotal = (devices||[]).reduce((a,d) => a + +d.count, 0) || 1;
+  const devColors = { Desktop:'var(--blue)', Mobile:'var(--orange)', Tablet:'var(--cyan)' };
+
+  $('breakdown-row').innerHTML = `
+    <div class="pnl">
+      <div class="pnl-t">Top Countries</div>
+      <div class="bar-list">
+        ${(countries||[]).slice(0,8).map(c => `
+          <div class="bi">
+            <div class="bi-lbl">${flag(c.country_code)} ${c.country}</div>
+            <div class="bi-track"><div class="bi-fill blue" style="width:${pct(+c.visits,maxC)}%"></div></div>
+            <div class="bi-cnt">${N(c.visits)}</div>
+          </div>`).join('') || empty()}
+      </div>
+    </div>
+    <div class="pnl">
+      <div class="pnl-t">Top Pages</div>
+      <div class="bar-list">
+        ${(pages||[]).slice(0,8).map(p => `
+          <div class="bi">
+            <div class="bi-lbl" title="${p.page}">${p.page}</div>
+            <div class="bi-track"><div class="bi-fill orange" style="width:${pct(+p.visits,maxP)}%"></div></div>
+            <div class="bi-cnt">${N(p.visits)}</div>
+          </div>`).join('') || empty()}
+      </div>
+    </div>
+    <div class="pnl">
+      <div class="pnl-t">Device Breakdown</div>
+      <div class="dev-list">
+        ${(devices||[]).map(d => {
+          const pc = Math.round(+d.count / devTotal * 100);
+          const col = devColors[d.device] || 'var(--muted)';
+          return `<div class="dev-item">
+            <div class="dev-dot" style="background:${col}"></div>
+            <div class="dev-name">${d.device}</div>
+            <div class="dev-bar"><div class="dev-fill" style="width:${pc}%;background:${col}"></div></div>
+            <div class="dev-pct">${pc}%</div>
+          </div>`;
+        }).join('') || empty()}
+      </div>
+    </div>
+  `;
+}
+
+// ── RENDER TABLE ──────────────────────────────────────────────────
+function renderTable(rows) {
+  const wrap = $('tbl-wrap');
+  if (!rows || rows.length === 0) {
+    wrap.innerHTML = '<div class="loading-row" style="animation:none">No records found</div>';
+    return;
+  }
+  const bdg = d => d === 'Mobile' ? 'bdg-m' : d === 'Tablet' ? 'bdg-t' : 'bdg-d';
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>#</th><th>IP Address</th><th>Country</th><th>City / Region</th>
+        <th>ISP</th><th>Device</th><th>Browser</th><th>OS</th>
+        <th>Page</th><th>Referrer</th><th>Time</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map((r, i) => `<tr>
+          <td class="muted">${curPage * PAGE_SZ + i + 1}</td>
+          <td class="ip">${r.ip}</td>
+          <td>${flag(r.country_code)} ${r.country || '—'}</td>
+          <td class="muted">${[r.city, r.region].filter(Boolean).join(', ') || '—'}</td>
+          <td class="muted" style="max-width:130px;overflow:hidden;text-overflow:ellipsis" title="${r.isp}">${r.isp || '—'}</td>
+          <td><span class="bdg ${bdg(r.device)}">${r.device}</span></td>
+          <td class="muted">${r.browser}</td>
+          <td class="muted">${r.os}</td>
+          <td><span class="pg" title="${r.page}">${r.page}</span></td>
+          <td class="muted" style="max-width:120px;overflow:hidden;text-overflow:ellipsis" title="${r.referrer}">${r.referrer || '—'}</td>
+          <td class="tm">${ago(r.visited_at)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── PAGINATION ────────────────────────────────────────────────────
+function renderPagination() {
+  const pg  = $('pagination');
+  const tot = Math.ceil(totalRows / PAGE_SZ);
+  if (tot <= 1) { pg.style.display = 'none'; return; }
+  pg.style.display = 'flex';
+  pg.innerHTML = `
+    <div class="pg-info">${curPage*PAGE_SZ+1}–${Math.min((curPage+1)*PAGE_SZ, totalRows)} of ${N(totalRows)}</div>
+    <div class="pg-btns">
+      <button class="pg-btn" onclick="loadData(0)" ${curPage===0?'disabled':''}>«</button>
+      <button class="pg-btn" onclick="loadData(${curPage-1})" ${curPage===0?'disabled':''}>‹</button>
+      <span style="font:10px var(--mono);color:var(--muted);padding:4px 8px">${curPage+1}/${tot}</span>
+      <button class="pg-btn" onclick="loadData(${curPage+1})" ${curPage>=tot-1?'disabled':''}>›</button>
+      <button class="pg-btn" onclick="loadData(${tot-1})" ${curPage>=tot-1?'disabled':''}>»</button>
+    </div>`;
+}
+
+// ── PURGE ─────────────────────────────────────────────────────────
+async function confirmPurge() {
+  if (!confirm('⚠ Delete ALL visitor logs permanently?\n\nThis cannot be undone.')) return;
+  try {
+    const r = await fetch(`${API}?action=purge`, {
+      method:'POST', headers:{'X-Admin-Token': TOKEN}
+    });
+    const d = await r.json();
+    if (d.ok) { toast('All logs purged', 'ok'); loadData(0); }
+    else toast('Purge failed', 'err');
+  } catch(e) { toast('Error', 'err') }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function N(n) { return parseInt(n || 0).toLocaleString('en-IN') }
+function pct(v, max) { return Math.max(3, Math.round(v / max * 100)) }
+function empty() { return '<div style="font:11px var(--mono);color:var(--muted);padding:6px 0">No data yet</div>' }
+
+function flag(cc) {
+  if (!cc || cc.length !== 2) return '🌐';
+  return String.fromCodePoint(...[...cc.toUpperCase()].map(c => 0x1F1E6 - 65 + c.charCodeAt(0)));
+}
+
+function ago(dt) {
+  if (!dt) return '—';
+  const ms = Date.now() - new Date(dt.replace(' ', 'T') + '+05:30').getTime();
+  const s  = Math.floor(ms / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return new Date(dt.replace(' ','T')).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+
+function now() {
+  return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  if (!TOKEN) { showLogin(); return; }
+  // Verify token still valid
+  try {
+    const r = await fetch(`${API}?action=data&limit=1&offset=0`, {
+      headers: {'X-Admin-Token': TOKEN}
+    });
+    if (!r.ok) { TOKEN = ''; localStorage.removeItem(LS_KEY); showLogin(); return; }
+    showApp(); loadData(0); startAutoRefresh();
+  } catch(e) { showLogin() }
+});
+</script>
+</body>
+</html>
