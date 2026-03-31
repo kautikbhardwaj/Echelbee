@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ECH EL BEE — Field Service Management</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body, #root { margin: 0; padding: 0; height: 100%; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; }
+    input, select, textarea, button { font-family: inherit; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f0f4fa; }
+    ::-webkit-scrollbar-thumb { background: #c0cce0; border-radius: 99px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef } = React;
+
+    // ── CONFIG ───────────────────────────────────────────────
+    const API = "/api";
+
+    // ── Brand colours ────────────────────────────────────────
+    const B = {
+      blue:"#1a3c6e", accent:"#e84c2b", light:"#f0f4fa",
+      border:"#d0dce8", text:"#1a1a2e", muted:"#6b7a99",
+      green:"#16a34a", orange:"#ea580c", red:"#dc2626",
+    };
+
+    // ── API helpers ──────────────────────────────────────────
+    function getToken()  { try { return localStorage.getItem("elb_token"); }  catch { return null; } }
+    function setToken(t) { try { localStorage.setItem("elb_token", t); }      catch {} }
+    function clearToken(){ try { localStorage.removeItem("elb_token"); }       catch {} }
+
+    async function api(method, path, body) {
+      const token = getToken();
+      const opts = {
+        method,
+        headers: { "Content-Type":"application/json", ...(token?{Authorization:`Bearer ${token}`}:{}) },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      };
+      const res  = await fetch(`${API}/${path}`, opts);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      return data;
+    }
+    const GET    = (p)    => api("GET",    p);
+    const POST   = (p, b) => api("POST",   p, b);
+    const PUT    = (p, b) => api("PUT",    p, b);
+    const DEL    = (p)    => api("DELETE", p);
+
+    // ── Misc helpers ─────────────────────────────────────────
+    const today = () => new Date().toISOString().slice(0,10);
+    const fmt   = d  => d ? new Date(d).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "—";
+
+    // ════════════════════════════════════════════════════════
+    // SHARED UI PRIMITIVES
+    // ════════════════════════════════════════════════════════
+    const baseInp = {
+      width:"100%", padding:"9px 12px", border:`1.5px solid ${B.border}`,
+      borderRadius:8, fontSize:14, background:"#fff", boxSizing:"border-box",
+      outline:"none", color:B.text,
+    };
+
+    function Spinner() {
+      return (
+        <div style={{display:"inline-block",width:18,height:18,
+          border:"2px solid rgba(255,255,255,.4)",borderTopColor:"#fff",
+          borderRadius:"50%",animation:"elb-spin .6s linear infinite"}} />
+      );
+    }
+
+    function Badge({ status }) {
+      const map = {
+        installed:{bg:"#dcfce7",color:"#15803d",label:"Installed"},
+        returned: {bg:"#fef9c3",color:"#b45309",label:"Returned"},
+        on_amc:   {bg:"#dbeafe",color:"#1d4ed8",label:"On AMC"},
+        faulty:   {bg:"#fee2e2",color:"#b91c1c",label:"Billable"},
+      };
+      const s = map[status] || {bg:"#f1f5f9",color:"#64748b",label:status||"—"};
+      return <span style={{background:s.bg,color:s.color,borderRadius:99,padding:"2px 10px",fontSize:12,fontWeight:700}}>{s.label}</span>;
+    }
+
+    function RoleBadge({ role }) {
+      const m = {
+        admin:    {bg:"#fef3c7",color:"#92400e"},
+        engineer: {bg:"#dbeafe",color:"#1e40af"},
+        viewer:   {bg:"#f0fdf4",color:"#166534"},
+      };
+      const s = m[role]||m.viewer;
+      return <span style={{...s,borderRadius:99,padding:"2px 10px",fontSize:11,fontWeight:700,textTransform:"capitalize"}}>{role}</span>;
+    }
+
+    function Field({ label, children, span2 }) {
+      return (
+        <div style={{gridColumn:span2?"span 2":"span 1",display:"flex",flexDirection:"column",gap:4}}>
+          <label style={{fontSize:11,fontWeight:700,color:B.muted,textTransform:"uppercase",letterSpacing:.5}}>{label}</label>
+          {children}
+        </div>
+      );
+    }
+
+    function SecTitle({ children }) {
+      return (
+        <div style={{fontSize:11,fontWeight:800,color:B.blue,textTransform:"uppercase",
+          letterSpacing:1,padding:"16px 0 8px",borderBottom:`2px solid ${B.light}`,marginBottom:14}}>
+          {children}
+        </div>
+      );
+    }
+
+    function Btn({ children, onClick, variant="primary", small, full, disabled }) {
+      const v = {
+        primary:{background:B.blue,  color:"#fff"},
+        accent: {background:B.accent,color:"#fff"},
+        ghost:  {background:"#fff",  color:B.blue, border:`1.5px solid ${B.border}`},
+        danger: {background:B.red,   color:"#fff"},
+        green:  {background:B.green, color:"#fff"},
+      };
+      return (
+        <button onClick={onClick} disabled={disabled}
+          style={{...v[variant],border:"none",borderRadius:8,
+            padding:small?"6px 13px":"9px 20px",fontSize:small?12:14,fontWeight:700,
+            cursor:disabled?"not-allowed":"pointer",width:full?"100%":"auto",
+            opacity:disabled?.5:1,transition:"opacity .15s"}}
+          onMouseEnter={e=>{if(!disabled)e.currentTarget.style.opacity=".82";}}
+          onMouseLeave={e=>{e.currentTarget.style.opacity=disabled?"0.5":"1";}}
+        >{children}</button>
+      );
+    }
+
+    function Modal({ title, onClose, children, wide }) {
+      return (
+        <div style={{position:"fixed",inset:0,background:"rgba(10,20,50,.52)",zIndex:1000,
+          display:"flex",alignItems:"flex-start",justifyContent:"center",
+          padding:"24px 16px",overflowY:"auto"}}>
+          <div style={{background:"#fff",borderRadius:16,width:"100%",
+            maxWidth:wide?820:560,boxShadow:"0 24px 80px rgba(0,0,0,.28)",marginBottom:32}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",
+              padding:"18px 24px",borderBottom:`1px solid ${B.border}`,
+              position:"sticky",top:0,background:"#fff",zIndex:1,borderRadius:"16px 16px 0 0"}}>
+              <h2 style={{margin:0,fontSize:18,color:B.blue,fontFamily:"Georgia,serif"}}>{title}</h2>
+              <button onClick={onClose} style={{border:"none",background:"none",fontSize:24,cursor:"pointer",color:B.muted}}>×</button>
+            </div>
+            <div style={{padding:24}}>{children}</div>
+          </div>
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════════════════════
+    // LOGIN SCREEN
+    // ════════════════════════════════════════════════════════
+    function LoginScreen({ onLogin }) {
+      const [email,    setEmail]    = useState("");
+      const [password, setPassword] = useState("");
+      const [loading,  setLoading]  = useState(false);
+      const [error,    setError]    = useState("");
+
+      const handleLogin = async () => {
+        if (!email||!password) return setError("Enter email and password");
+        setLoading(true); setError("");
+        try {
+          const data = await POST("auth/login", { email, password });
+          setToken(data.token);
+          onLogin(data.user);
+        } catch(e) { setError(e.message); }
+        finally { setLoading(false); }
+      };
+
+      return (
+        <div style={{minHeight:"100vh",
+          background:`linear-gradient(135deg,${B.blue} 0%,#0f2547 100%)`,
+          display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+          <div style={{background:"#fff",borderRadius:20,padding:40,
+            width:"100%",maxWidth:400,boxShadow:"0 32px 80px rgba(0,0,0,.32)"}}>
+            <div style={{textAlign:"center",marginBottom:32}}>
+              <div style={{fontFamily:"Georgia,serif",fontSize:26,fontWeight:800,color:B.blue}}>ECH EL BEE</div>
+              <div style={{fontSize:11,color:B.accent,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",marginBottom:6}}>
+                Pixel 2 Paper · Field Service
+              </div>
+              <div style={{fontSize:13,color:B.muted}}>Sign in to your account</div>
+            </div>
+
+            {error && (
+              <div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:8,
+                padding:"10px 14px",color:B.red,fontSize:13,marginBottom:16}}>⚠ {error}</div>
+            )}
+
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              <div>
+                <label style={{fontSize:11,fontWeight:700,color:B.muted,textTransform:"uppercase",
+                  letterSpacing:.5,display:"block",marginBottom:4}}>Email</label>
+                <input style={baseInp} type="email" placeholder="admin@echelbee.in"
+                  value={email} onChange={e=>setEmail(e.target.value)}
+                  onKeyDown={e=>e.key==="Enter"&&handleLogin()} />
+              </div>
+              <div>
+                <label style={{fontSize:11,fontWeight:700,color:B.muted,textTransform:"uppercase",
+                  letterSpacing:.5,display:"block",marginBottom:4}}>Password</label>
+                <input style={baseInp} type="password" placeholder="••••••••"
+                  value={password} onChange={e=>setPassword(e.target.value)}
+                  onKeyDown={e=>e.key==="Enter"&&handleLogin()} />
+              </div>
+              <button onClick={handleLogin} disabled={loading}
+                style={{background:B.blue,color:"#fff",border:"none",borderRadius:10,
+                  padding:"12px",fontSize:15,fontWeight:700,
+                  cursor:loading?"not-allowed":"pointer",marginTop:4,
+                  display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                {loading ? <><Spinner/> Signing in…</> : "Sign In →"}
+              </button>
+            </div>
+
+            <div style={{marginTop:20,fontSize:12,color:B.muted,textAlign:"center"}}>
+              Default: admin@echelbee.in / Admin@123<br/>
+              <span style={{color:B.accent}}>⚠ Change password after first login!</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════════════════════
+    // MODEL PICKER
+    // ════════════════════════════════════════════════════════
+    function ModelPicker({ models, onModelsChange, value, onChange, canEdit }) {
+      const [adding,  setAdding]  = useState(false);
+      const [newName, setNewName] = useState("");
+      const [saving,  setSaving]  = useState(false);
+      const inputRef = useRef();
+      useEffect(()=>{ if(adding&&inputRef.current) inputRef.current.focus(); },[adding]);
+
+      const handleAdd = async () => {
+        const name = newName.trim();
+        if (!name) return;
+        setSaving(true);
+        try {
+          const res = await POST("models",{ name });
+          onModelsChange([...models,{ id:res.id, name }]);
+          onChange(name);
+          setAdding(false); setNewName("");
+        } catch(e) { alert(e.message); }
+        finally { setSaving(false); }
+      };
+
+      return (
+        <div style={{display:"flex",flexDirection:"column",gap:6}}>
+          <select style={baseInp} value={value}
+            onChange={e=>{ if(e.target.value==="__add__") setAdding(true);
+                           else { onChange(e.target.value); setAdding(false); } }}>
+            <option value="">— Select Model —</option>
+            {models.map(m=><option key={m.id} value={m.name}>{m.name}</option>)}
+            {canEdit && <option value="__add__">＋ Add New Model…</option>}
+          </select>
+
+          {adding && (
+            <div style={{display:"flex",gap:6,alignItems:"center",
+              background:"#f8faff",border:`1.5px dashed ${B.blue}`,borderRadius:8,padding:"8px 10px"}}>
+              <input ref={inputRef} style={{...baseInp,flex:1,fontSize:13}}
+                placeholder="Enter model name e.g. IM 7000"
+                value={newName} onChange={e=>setNewName(e.target.value)}
+                onKeyDown={e=>{ if(e.key==="Enter") handleAdd();
+                                if(e.key==="Escape"){setAdding(false);setNewName("");} }} />
+              <button onClick={handleAdd} disabled={saving}
+                style={{background:B.green,color:"#fff",border:"none",borderRadius:7,
+                  padding:"7px 14px",cursor:"pointer",fontWeight:700,fontSize:13,whiteSpace:"nowrap"}}>
+                {saving?"…":"✓ Save"}
+              </button>
+              <button onClick={()=>{setAdding(false);setNewName("");}}
+                style={{background:"#fff",color:B.muted,border:`1px solid ${B.border}`,
+                  borderRadius:7,padding:"7px 10px",cursor:"pointer",fontSize:13}}>✕</button>
+            </div>
+          )}
+          {value && !adding && (
+            <div style={{fontSize:12,color:B.muted}}>
+              Selected: <strong style={{color:B.blue}}>{value}</strong>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════════════════════
+    // CUSTOMER PICKER
+    // ════════════════════════════════════════════════════════
+    function CustomerPicker({ customers, value, onChange }) {
+      const [query,    setQuery]    = useState(value?.customerData?.name||"");
+      const [showDrop, setShowDrop] = useState(false);
+      const [mode,     setMode]     = useState(value?.mode||"idle");
+      const ref = useRef();
+
+      const filtered   = customers.filter(c=>c.name.toLowerCase().includes(query.toLowerCase()));
+      const exactMatch = customers.find(c=>c.name.toLowerCase()===query.toLowerCase());
+
+      useEffect(()=>{
+        const h = e=>{ if(ref.current&&!ref.current.contains(e.target)) setShowDrop(false); };
+        document.addEventListener("mousedown",h);
+        return ()=>document.removeEventListener("mousedown",h);
+      },[]);
+
+      const selectExisting = c => {
+        setQuery(c.name); setMode("existing"); setShowDrop(false);
+        onChange({mode:"existing",customerId:c.id,customerData:c});
+      };
+      const startNew = () => {
+        setMode("new"); setShowDrop(false);
+        onChange({mode:"new",customerId:null,
+          customerData:{name:query,address:"",tel:"",email:"",
+            contactPerson:"",keyOperator:"",officeHours:"",weeklyOff:""}});
+      };
+      const updateField = (k,v) => onChange({...value,customerData:{...value.customerData,[k]:v}});
+      const clear = () => { setQuery(""); setMode("idle"); setShowDrop(false); onChange(null); };
+
+      return (
+        <div>
+          <div ref={ref} style={{position:"relative"}}>
+            <div style={{display:"flex",gap:8}}>
+              <div style={{flex:1,position:"relative"}}>
+                <input style={{...baseInp,
+                    borderColor:mode==="existing"?B.green:mode==="new"?B.blue:B.border,
+                    paddingRight:34}}
+                  placeholder="Type customer name to search or add new…"
+                  value={query} disabled={mode==="existing"}
+                  onChange={e=>{ setQuery(e.target.value); setShowDrop(true);
+                    if(mode!=="idle"){setMode("idle");onChange(null);} }}
+                  onFocus={()=>setShowDrop(true)} />
+                {mode==="existing" && (
+                  <span style={{position:"absolute",right:10,top:"50%",
+                    transform:"translateY(-50%)",color:B.green,fontSize:16,pointerEvents:"none"}}>✓</span>
+                )}
+              </div>
+              {mode!=="idle" && (
+                <button onClick={clear}
+                  style={{border:`1px solid ${B.border}`,background:"#fff",borderRadius:8,
+                    padding:"0 12px",cursor:"pointer",color:B.muted,fontSize:13}}>✕ Clear</button>
+              )}
+            </div>
+
+            {showDrop && mode==="idle" && (
+              <div style={{position:"absolute",top:"calc(100% + 4px)",left:0,right:0,
+                background:"#fff",border:`1.5px solid ${B.border}`,borderRadius:10,
+                boxShadow:"0 8px 30px rgba(0,0,0,.12)",zIndex:200,maxHeight:260,overflowY:"auto"}}>
+                {filtered.length>0 && <>
+                  <div style={{padding:"7px 12px 2px",fontSize:10,fontWeight:800,
+                    color:B.muted,textTransform:"uppercase",letterSpacing:1}}>Existing Customers</div>
+                  {filtered.map(c=>(
+                    <div key={c.id} onMouseDown={()=>selectExisting(c)}
+                      style={{padding:"10px 14px",cursor:"pointer",borderTop:`1px solid ${B.border}`}}
+                      onMouseEnter={e=>e.currentTarget.style.background=B.light}
+                      onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      <div style={{fontWeight:600,color:B.text}}>{c.name}</div>
+                      <div style={{fontSize:12,color:B.muted}}>
+                        {[c.tel,c.contact_person].filter(Boolean).join(" · ")}
+                      </div>
+                    </div>
+                  ))}
+                </>}
+                {query.length>0 && !exactMatch && (
+                  <div onMouseDown={startNew}
+                    style={{padding:"11px 14px",cursor:"pointer",
+                      borderTop:`1px solid ${B.border}`,display:"flex",alignItems:"center",
+                      gap:10,background:"#f8faff"}}
+                    onMouseEnter={e=>e.currentTarget.style.background="#eef2ff"}
+                    onMouseLeave={e=>e.currentTarget.style.background="#f8faff"}>
+                    <span style={{background:B.blue,color:"#fff",borderRadius:5,
+                      padding:"2px 8px",fontSize:11,fontWeight:800}}>+ NEW</span>
+                    <span style={{color:B.blue,fontWeight:600}}>Add "{query}" as new customer</span>
+                  </div>
+                )}
+                {filtered.length===0 && query.length===0 && (
+                  <div style={{padding:"14px",color:B.muted,fontSize:13,textAlign:"center"}}>
+                    Start typing to search or create a customer
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {mode==="existing" && value?.customerData && (
+            <div style={{marginTop:8,background:"#f0fdf4",border:"1px solid #86efac",
+              borderRadius:10,padding:"9px 14px",fontSize:13,display:"flex",gap:16,flexWrap:"wrap"}}>
+              {value.customerData.tel            && <span>📞 {value.customerData.tel}</span>}
+              {value.customerData.contact_person && <span>👤 {value.customerData.contact_person}</span>}
+              {value.customerData.address        && <span>📍 {value.customerData.address}</span>}
+            </div>
+          )}
+
+          {mode==="new" && (
+            <div style={{marginTop:12,background:"#f8faff",
+              border:`1.5px dashed ${B.blue}`,borderRadius:12,padding:16}}>
+              <div style={{fontSize:11,fontWeight:800,color:B.blue,
+                textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>🆕 New Customer Details</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px 14px"}}>
+                {[
+                  ["address","Full Address","span 2",true],
+                  ["tel","Telephone","span 1",false],
+                  ["email","Email","span 1",false],
+                  ["contactPerson","Contact Person","span 1",false],
+                  ["keyOperator","Key Operator","span 1",false],
+                  ["officeHours","Office Hours","span 1",false],
+                  ["weeklyOff","Weekly Off","span 1",false],
+                ].map(([k,label,gc,isArea])=>(
+                  <div key={k} style={{gridColumn:gc,display:"flex",flexDirection:"column",gap:3}}>
+                    <label style={{fontSize:10,fontWeight:700,color:B.muted,
+                      textTransform:"uppercase",letterSpacing:.5}}>{label}</label>
+                    {isArea
+                      ? <textarea style={{...baseInp,minHeight:52,resize:"vertical"}}
+                          value={value.customerData[k]||""} onChange={e=>updateField(k,e.target.value)}/>
+                      : <input style={baseInp} value={value.customerData[k]||""}
+                          onChange={e=>updateField(k,e.target.value)}/>
+                    }
+                  </div>
+                ))}
+              </div>
+              <div style={{marginTop:10,fontSize:11,color:B.muted}}>
+                ℹ️ Customer saved automatically on submit.
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════════════════════
+    // INSTALLATION FORM
+    // ════════════════════════════════════════════════════════
+    function InstallForm({ customers, models, onModelsChange, onSave, onClose, currentUser }) {
+      const [customer, setCustomer] = useState(null);
+      const [selModel, setSelModel] = useState("");
+      const [saving,   setSaving]   = useState(false);
+      const [f, setF] = useState({
+        invoiceNo:"", date:today(), deliveredOn:today(), installedOn:today(),
+        warrantyExpiry:"", warrantyCopies:"", mcSlNo:"", optionSlNo:"",
+        mcIp:"", mcPassword:"", os:"", cvt:"N", earthing:"N",
+        acc1:"",acc1sl:"",acc2:"",acc2sl:"",acc3:"",acc3sl:"",acc4:"",acc4sl:"",
+        sol1:"",sol2:"",sol3:"",sol4:"",
+        trainedName:"", trainedDate:today(),
+        engName:currentUser.name||"", engNo:"", notes:"",
+      });
+      const set = (k,v) => setF(p=>({...p,[k]:v}));
+      const g2  = {display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px 18px"};
+
+      const handleSave = async () => {
+        if (!customer)   return alert("Please select or add a customer.");
+        if (!selModel)   return alert("Please select a machine model.");
+        setSaving(true);
+        try {
+          let customerId;
+          if (customer.mode==="existing") {
+            customerId = customer.customerId;
+          } else {
+            const d = customer.customerData;
+            const r = await POST("customers",{name:d.name,address:d.address,tel:d.tel,
+              email:d.email,contactPerson:d.contactPerson,keyOperator:d.keyOperator,
+              officeHours:d.officeHours,weeklyOff:d.weeklyOff});
+            customerId = r.id;
+          }
+          await POST("machines",{customerId,model:selModel,...f});
+          onSave();
+        } catch(e) { alert("Error: "+e.message); }
+        finally { setSaving(false); }
+      };
+
+      return (
+        <div style={{display:"flex",flexDirection:"column",gap:2}}>
+          <SecTitle>Customer</SecTitle>
+          <CustomerPicker customers={customers} value={customer} onChange={setCustomer}/>
+
+          <SecTitle>Invoice & Dates</SecTitle>
+          <div style={g2}>
+            <Field label="Invoice No."><input style={baseInp} value={f.invoiceNo} onChange={e=>set("invoiceNo",e.target.value)}/></Field>
+            <Field label="Date"><input type="date" style={baseInp} value={f.date} onChange={e=>set("date",e.target.value)}/></Field>
+            <Field label="Delivered On"><input type="date" style={baseInp} value={f.deliveredOn} onChange={e=>set("deliveredOn",e.target.value)}/></Field>
+            <Field label="Installed On"><input type="date" style={baseInp} value={f.installedOn} onChange={e=>set("installedOn",e.target.value)}/></Field>
+            <Field label="Warranty Expiry"><input type="date" style={baseInp} value={f.warrantyExpiry} onChange={e=>set("warrantyExpiry",e.target.value)}/></Field>
+            <Field label="Warranty Copies"><input style={baseInp} placeholder="e.g. 50000" value={f.warrantyCopies} onChange={e=>set("warrantyCopies",e.target.value)}/></Field>
+          </div>
+
+          <SecTitle>Machine Details</SecTitle>
+          <div style={g2}>
+            <Field label="Model" span2>
+              <ModelPicker models={models} onModelsChange={onModelsChange} value={selModel} onChange={setSelModel}
+                canEdit={["admin","engineer"].includes(currentUser.role)}/>
+            </Field>
+            <Field label="Serial No."><input style={baseInp} value={f.mcSlNo} onChange={e=>set("mcSlNo",e.target.value)}/></Field>
+            <Field label="Option / Digital"><input style={baseInp} value={f.optionSlNo} onChange={e=>set("optionSlNo",e.target.value)}/></Field>
+            <Field label="M/C IP"><input style={baseInp} value={f.mcIp} onChange={e=>set("mcIp",e.target.value)}/></Field>
+            <Field label="M/C Password"><input style={baseInp} value={f.mcPassword} onChange={e=>set("mcPassword",e.target.value)}/></Field>
+            <Field label="OS"><input style={baseInp} value={f.os} onChange={e=>set("os",e.target.value)}/></Field>
+            <Field label="CVT/Stabiliser">
+              <select style={baseInp} value={f.cvt} onChange={e=>set("cvt",e.target.value)}>
+                <option value="Y">Yes</option><option value="N">No</option>
+              </select>
+            </Field>
+            <Field label="Earthing">
+              <select style={baseInp} value={f.earthing} onChange={e=>set("earthing",e.target.value)}>
+                <option value="Y">Yes</option><option value="N">No</option>
+              </select>
+            </Field>
+          </div>
+
+          <SecTitle>Accessories & Solutions</SecTitle>
+          <div style={g2}>
+            {[1,2,3,4].map(n=>(
+              <Field key={n} label={`Accessory ${n}`}>
+                <div style={{display:"flex",gap:6}}>
+                  <input style={{...baseInp,flex:2}} placeholder="Name" value={f[`acc${n}`]} onChange={e=>set(`acc${n}`,e.target.value)}/>
+                  <input style={{...baseInp,flex:1}} placeholder="S/N"  value={f[`acc${n}sl`]} onChange={e=>set(`acc${n}sl`,e.target.value)}/>
+                </div>
+              </Field>
+            ))}
+            {[1,2,3,4].map(n=>(
+              <Field key={n} label={`Solution ${n}`}>
+                <input style={baseInp} value={f[`sol${n}`]} onChange={e=>set(`sol${n}`,e.target.value)}/>
+              </Field>
+            ))}
+          </div>
+
+          <SecTitle>Training & Engineer</SecTitle>
+          <div style={g2}>
+            <Field label="Person Trained"><input style={baseInp} value={f.trainedName} onChange={e=>set("trainedName",e.target.value)}/></Field>
+            <Field label="Training Date"><input type="date" style={baseInp} value={f.trainedDate} onChange={e=>set("trainedDate",e.target.value)}/></Field>
+            <Field label="Engr./Tech. Name"><input style={baseInp} value={f.engName} onChange={e=>set("engName",e.target.value)}/></Field>
+            <Field label="Engr./Tech. No."><input style={baseInp} value={f.engNo} onChange={e=>set("engNo",e.target.value)}/></Field>
+            <Field label="Notes" span2>
+              <textarea style={{...baseInp,minHeight:60,resize:"vertical"}} value={f.notes} onChange={e=>set("notes",e.target.value)}/>
+            </Field>
+          </div>
+
+          <div style={{display:"flex",gap:10,justifyContent:"flex-end",paddingTop:10}}>
+            <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+            <Btn variant="green" onClick={handleSave} disabled={saving}>{saving?"Saving…":"💾 Save Installation"}</Btn>
+          </div>
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════════════════════
+    // SERVICE CALL FORM
+    // ════════════════════════════════════════════════════════
+    function ServiceForm({ customers, machines, models, onModelsChange, onSave, onClose, prefillMachine, currentUser }) {
+      const initCust = prefillMachine
+        ? {mode:"existing",customerId:prefillMachine.customer_id,
+            customerData:customers.find(c=>c.id===prefillMachine.customer_id)}
+        : null;
+      const [customer,      setCustomer]      = useState(initCust);
+      const [machineId,     setMachineId]     = useState(prefillMachine?.id||"");
+      const [saving,        setSaving]        = useState(false);
+      const [addingMachine, setAddingMachine] = useState(false);
+      const [newMachine,    setNewMachine]    = useState({model:"",mcSlNo:"",invoiceNo:"",installedOn:today(),status:"installed"});
+      const [f, setF] = useState({
+        date:today(),callTime:"",soId:"",documentNo:"",territoryCode:"",contractType:"",
+        callReason:"",incCode:"",timeDespatched:"",timeArrived:"",callCompleted:"",
+        scaCode:"",engTechNo:"",engName:currentUser.name||"",
+        symptom:"",cause:"",action:"",
+        meterTotal:"",mfpCpr:"",mfpFax:"",mfpPrp:"",mfpClCpr:"",mfpClFax:"",mfpClPrp:"",masterCopies:"",
+        spareParts:[{partNo:"",description:"",seoNo:"",qtyReqd:"",qtyUsed:"",unitPrice:""}],
+        billable:false,callCharges:"",taxServices:"",grandTotal:"",notes:"",
+      });
+      const set = (k,v) => setF(p=>({...p,[k]:v}));
+      const g2  = {display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px 18px"};
+
+      // Show ALL machines regardless of status; filter by customer if selected
+      const availMachines = customer?.customerId
+        ? machines.filter(m=>m.customer_id===customer.customerId)
+        : machines;
+
+      const addPart    = () => setF(p=>({...p,spareParts:[...p.spareParts,{partNo:"",description:"",seoNo:"",qtyReqd:"",qtyUsed:"",unitPrice:""}]}));
+      const setPart    = (i,k,v) => setF(p=>{const sp=[...p.spareParts];sp[i]={...sp[i],[k]:v};return{...p,spareParts:sp};});
+      const removePart = i => setF(p=>({...p,spareParts:p.spareParts.filter((_,idx)=>idx!==i)}));
+
+      const handleSave = async () => {
+        if (!customer)                              return alert("Please select or add a customer.");
+        if (!machineId && !addingMachine)           return alert("Please select a machine or add a new one.");
+        if (addingMachine && !newMachine.model)     return alert("Please select a model for the new machine.");
+        if (!f.symptom.trim())                      return alert("Symptom / complaint is required.");
+        setSaving(true);
+        try {
+          let customerId;
+          if (customer.mode==="existing") {
+            customerId = customer.customerId;
+          } else {
+            const d = customer.customerData;
+            const r = await POST("customers",{name:d.name,address:d.address,tel:d.tel,
+              email:d.email,contactPerson:d.contactPerson,keyOperator:d.keyOperator,
+              officeHours:d.officeHours,weeklyOff:d.weeklyOff});
+            customerId = r.id;
+          }
+          let finalMachineId = machineId;
+          if (addingMachine) {
+            const mr = await POST("machines",{customerId,model:newMachine.model,
+              mcSlNo:newMachine.mcSlNo,invoiceNo:newMachine.invoiceNo,
+              installedOn:newMachine.installedOn,date:newMachine.installedOn,
+              status:newMachine.status});
+            finalMachineId = mr.id;
+          }
+          await POST("service-calls",{customerId,machineId:finalMachineId,...f});
+          onSave();
+        } catch(e) { alert("Error: "+e.message); }
+        finally { setSaving(false); }
+      };
+
+      return (
+        <div style={{display:"flex",flexDirection:"column",gap:2}}>
+          <SecTitle>Customer</SecTitle>
+          <CustomerPicker customers={customers} value={customer} onChange={c=>{setCustomer(c);setMachineId("");}}/>
+
+          <SecTitle>Machine & Call Info</SecTitle>
+          <div style={g2}>
+            <Field label="Machine" span2>
+              {!addingMachine ? (<>
+                <select style={baseInp} value={machineId} onChange={e=>{ if(e.target.value==="__new__"){setAddingMachine(true);setMachineId("");}else setMachineId(e.target.value);}}>
+                  <option value="">— Select Machine (any status) —</option>
+                  {availMachines.map(m=><option key={m.id} value={m.id}>{m.model} · S/N: {m.mc_sl_no||"No S/N"} [{m.status}]</option>)}
+                  <option value="__new__">＋ Machine not listed — Add new machine…</option>
+                </select>
+                {availMachines.length===0&&customer&&(
+                  <div style={{fontSize:12,color:B.accent,marginTop:4}}>No machines found for this customer. Use "Add new machine" above.</div>
+                )}
+              </>) : (
+                <div style={{background:"#f8faff",border:`1.5px dashed ${B.blue}`,borderRadius:10,padding:14}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                    <span style={{fontSize:11,fontWeight:800,color:B.blue,textTransform:"uppercase",letterSpacing:.8}}>🆕 New Machine (will be saved to database)</span>
+                    <button onClick={()=>{setAddingMachine(false);setMachineId("");}} style={{border:"none",background:"none",cursor:"pointer",color:B.muted,fontSize:18}}>× Back to list</button>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px 14px"}}>
+                    <Field label="Model *" span2>
+                      <ModelPicker models={models} onModelsChange={onModelsChange} value={newMachine.model} onChange={v=>setNewMachine(p=>({...p,model:v}))} canEdit={true}/>
+                    </Field>
+                    <Field label="Serial No."><input style={baseInp} placeholder="Machine S/N" value={newMachine.mcSlNo} onChange={e=>setNewMachine(p=>({...p,mcSlNo:e.target.value}))}/></Field>
+                    <Field label="Invoice No."><input style={baseInp} value={newMachine.invoiceNo} onChange={e=>setNewMachine(p=>({...p,invoiceNo:e.target.value}))}/></Field>
+                    <Field label="Installation Date"><input type="date" style={baseInp} value={newMachine.installedOn} onChange={e=>setNewMachine(p=>({...p,installedOn:e.target.value}))}/></Field>
+                    <Field label="Status">
+                      <select style={baseInp} value={newMachine.status} onChange={e=>setNewMachine(p=>({...p,status:e.target.value}))}>
+                        <option value="installed">Installed</option>
+                        <option value="on_amc">On AMC</option>
+                        <option value="faulty">Faulty</option>
+                        <option value="returned">Returned</option>
+                      </select>
+                    </Field>
+                  </div>
+                </div>
+              )}
+            </Field>
+            <Field label="Call Date"><input type="date" style={baseInp} value={f.date} onChange={e=>set("date",e.target.value)}/></Field>
+            <Field label="Call Time"><input type="time" style={baseInp} value={f.callTime} onChange={e=>set("callTime",e.target.value)}/></Field>
+            <Field label="Call Reason"><input style={baseInp} value={f.callReason} onChange={e=>set("callReason",e.target.value)}/></Field>
+            <Field label="SO ID"><input style={baseInp} value={f.soId} onChange={e=>set("soId",e.target.value)}/></Field>
+            <Field label="Document No."><input style={baseInp} value={f.documentNo} onChange={e=>set("documentNo",e.target.value)}/></Field>
+            <Field label="Territory Code"><input style={baseInp} value={f.territoryCode} onChange={e=>set("territoryCode",e.target.value)}/></Field>
+            <Field label="Contract Type"><input style={baseInp} value={f.contractType} onChange={e=>set("contractType",e.target.value)}/></Field>
+            <Field label="INC Code"><input style={baseInp} value={f.incCode} onChange={e=>set("incCode",e.target.value)}/></Field>
+            <Field label="SCA Code"><input style={baseInp} value={f.scaCode} onChange={e=>set("scaCode",e.target.value)}/></Field>
+            <Field label="Time Despatched"><input type="time" style={baseInp} value={f.timeDespatched} onChange={e=>set("timeDespatched",e.target.value)}/></Field>
+            <Field label="Time Arrived"><input type="time" style={baseInp} value={f.timeArrived} onChange={e=>set("timeArrived",e.target.value)}/></Field>
+            <Field label="Call Completed"><input type="time" style={baseInp} value={f.callCompleted} onChange={e=>set("callCompleted",e.target.value)}/></Field>
+            <Field label="Engr./Tech. Name"><input style={baseInp} value={f.engName} onChange={e=>set("engName",e.target.value)}/></Field>
+            <Field label="Engr./Tech. No."><input style={baseInp} value={f.engTechNo} onChange={e=>set("engTechNo",e.target.value)}/></Field>
+          </div>
+
+          <SecTitle>Diagnosis</SecTitle>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {[["symptom","Symptom / Complaint"],["cause","Cause"],["action","Action Taken"]].map(([k,l])=>(
+              <div key={k} style={{display:"flex",flexDirection:"column",gap:4}}>
+                <label style={{fontSize:11,fontWeight:700,color:B.muted,textTransform:"uppercase",letterSpacing:.5}}>{l}</label>
+                <textarea style={{...baseInp,minHeight:68,resize:"vertical"}} value={f[k]} onChange={e=>set(k,e.target.value)}/>
+              </div>
+            ))}
+          </div>
+
+          <SecTitle>Meter Reading</SecTitle>
+          <div style={g2}>
+            {[["meterTotal","Total"],["mfpCpr","MFP B/W CPR"],["mfpFax","MFP B/W FAX"],
+              ["mfpPrp","MFP B/W PRP"],["mfpClCpr","MFP CL CPR"],["mfpClFax","MFP CL FAX"],
+              ["mfpClPrp","MFP CL PRP"],["masterCopies","PRI-PORT Master"]].map(([k,l])=>(
+              <Field key={k} label={l}><input style={baseInp} value={f[k]} onChange={e=>set(k,e.target.value)}/></Field>
+            ))}
+          </div>
+
+          <SecTitle>Spare Parts</SecTitle>
+          <div style={{overflowX:"auto"}}>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+              <thead>
+                <tr style={{background:B.light}}>
+                  {["Part No.","Description","SEO No.","Qty Req.","Qty Used","Unit Price",""].map(h=>(
+                    <th key={h} style={{padding:"7px 8px",textAlign:"left",fontWeight:700,
+                      color:B.muted,fontSize:10,textTransform:"uppercase"}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {f.spareParts.map((sp,i)=>(
+                  <tr key={i} style={{borderTop:`1px solid ${B.border}`}}>
+                    {["partNo","description","seoNo","qtyReqd","qtyUsed","unitPrice"].map(k=>(
+                      <td key={k} style={{padding:"4px 5px"}}>
+                        <input style={{...baseInp,fontSize:12,padding:"6px 8px"}}
+                          value={sp[k]} onChange={e=>setPart(i,k,e.target.value)}/>
+                      </td>
+                    ))}
+                    <td style={{padding:"4px 5px"}}>
+                      <button onClick={()=>removePart(i)}
+                        style={{border:"none",background:"none",cursor:"pointer",color:B.muted,fontSize:18}}>×</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button onClick={addPart}
+              style={{marginTop:8,border:`1px dashed ${B.blue}`,background:"transparent",
+                color:B.blue,borderRadius:6,padding:"6px 14px",cursor:"pointer",fontSize:12}}>
+              + Add Part
+            </button>
+          </div>
+
+          <SecTitle>Billing</SecTitle>
+          <div style={g2}>
+            <Field label="Billable">
+              <select style={baseInp} value={f.billable?"yes":"no"} onChange={e=>set("billable",e.target.value==="yes")}>
+                <option value="no">No — Under Contract / Warranty</option>
+                <option value="yes">Yes — Billable Call</option>
+              </select>
+            </Field>
+            <Field label="Call Charges"><input style={baseInp} value={f.callCharges} onChange={e=>set("callCharges",e.target.value)}/></Field>
+            <Field label="Tax / Services"><input style={baseInp} value={f.taxServices} onChange={e=>set("taxServices",e.target.value)}/></Field>
+            <Field label="Grand Total"><input style={baseInp} value={f.grandTotal} onChange={e=>set("grandTotal",e.target.value)}/></Field>
+            <Field label="Internal Notes" span2>
+              <textarea style={{...baseInp,minHeight:50,resize:"vertical"}} value={f.notes} onChange={e=>set("notes",e.target.value)}/>
+            </Field>
+          </div>
+
+          <div style={{display:"flex",gap:10,justifyContent:"flex-end",paddingTop:10}}>
+            <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+            <Btn variant="accent" onClick={handleSave} disabled={saving}>{saving?"Saving…":"💾 Save Service Call"}</Btn>
+          </div>
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════════════════════
+    // RETURN FORM
+    // ════════════════════════════════════════════════════════
+    function ReturnForm({ customers, machines, onSave, onClose }) {
+      const [customer,  setCustomer]  = useState(null);
+      const [machineId, setMachineId] = useState("");
+      const [saving,    setSaving]    = useState(false);
+      const [f, setF] = useState({returnDate:today(),reason:"",condition:"Good",collectedBy:"",notes:""});
+      const set = (k,v) => setF(p=>({...p,[k]:v}));
+      const avail = customer?.customerId
+        ? machines.filter(m=>m.customer_id===customer.customerId&&m.status!=="returned")
+        : machines.filter(m=>m.status!=="returned");
+
+      const handleSave = async () => {
+        if (!machineId) return alert("Select a machine.");
+        setSaving(true);
+        try {
+          let customerId = customer?.customerId;
+          if (customer?.mode==="new") {
+            const d = customer.customerData;
+            const r = await POST("customers",{name:d.name,address:d.address,tel:d.tel,email:d.email});
+            customerId = r.id;
+          }
+          await POST("returns",{customerId,machineId,...f});
+          onSave();
+        } catch(e) { alert("Error: "+e.message); }
+        finally { setSaving(false); }
+      };
+
+      return (
+        <div style={{display:"flex",flexDirection:"column",gap:2}}>
+          <SecTitle>Customer</SecTitle>
+          <CustomerPicker customers={customers} value={customer} onChange={c=>{setCustomer(c);setMachineId("");}}/>
+          <SecTitle>Return Details</SecTitle>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px 18px"}}>
+            <Field label="Machine">
+              <select style={baseInp} value={machineId} onChange={e=>setMachineId(e.target.value)}>
+                <option value="">— Select Machine —</option>
+                {avail.map(m=><option key={m.id} value={m.id}>{m.model} · {m.mc_sl_no||"No S/N"}</option>)}
+              </select>
+            </Field>
+            <Field label="Return Date"><input type="date" style={baseInp} value={f.returnDate} onChange={e=>set("returnDate",e.target.value)}/></Field>
+            <Field label="Condition">
+              <select style={baseInp} value={f.condition} onChange={e=>set("condition",e.target.value)}>
+                {["Good","Fair","Damaged","Needs Service"].map(c=><option key={c}>{c}</option>)}
+              </select>
+            </Field>
+            <Field label="Collected By"><input style={baseInp} value={f.collectedBy} onChange={e=>set("collectedBy",e.target.value)}/></Field>
+            <Field label="Reason" span2><input style={baseInp} value={f.reason} onChange={e=>set("reason",e.target.value)}/></Field>
+            <Field label="Notes" span2><textarea style={{...baseInp,minHeight:60,resize:"vertical"}} value={f.notes} onChange={e=>set("notes",e.target.value)}/></Field>
+          </div>
+          <div style={{display:"flex",gap:10,justifyContent:"flex-end",paddingTop:10}}>
+            <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+            <Btn variant="danger" onClick={handleSave} disabled={saving}>{saving?"Saving…":"📦 Record Return"}</Btn>
+          </div>
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════════════════════
+    // USER MANAGER
+    // ════════════════════════════════════════════════════════
+    function UserManager() {
+      const [users,   setUsers]   = useState([]);
+      const [form,    setForm]    = useState({name:"",email:"",password:"",role:"engineer"});
+      const [loading, setLoading] = useState(true);
+      const setF = (k,v) => setForm(p=>({...p,[k]:v}));
+
+      useEffect(()=>{ GET("users").then(setUsers).catch(()=>{}).finally(()=>setLoading(false)); },[]);
+
+      const createUser = async () => {
+        if (!form.name||!form.email||!form.password) return alert("All fields required");
+        try {
+          await POST("users",form);
+          setForm({name:"",email:"",password:"",role:"engineer"});
+          setUsers(await GET("users"));
+        } catch(e) { alert(e.message); }
+      };
+
+      const toggleActive = async u => {
+        await PUT(`users/${u.id}`,{active:u.active?0:1});
+        setUsers(await GET("users"));
+      };
+
+      return (
+        <div>
+          <h1 style={{margin:"0 0 20px",fontFamily:"Georgia,serif",color:B.blue,fontSize:24}}>
+            ⚙️ Users & Roles
+          </h1>
+          <SecTitle>Add New User</SecTitle>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px 14px",marginBottom:16}}>
+            <Field label="Full Name"><input style={baseInp} value={form.name} onChange={e=>setF("name",e.target.value)}/></Field>
+            <Field label="Email"><input style={baseInp} type="email" value={form.email} onChange={e=>setF("email",e.target.value)}/></Field>
+            <Field label="Password"><input style={baseInp} type="password" value={form.password} onChange={e=>setF("password",e.target.value)}/></Field>
+            <Field label="Role">
+              <select style={baseInp} value={form.role} onChange={e=>setF("role",e.target.value)}>
+                <option value="admin">Admin — Full access</option>
+                <option value="engineer">Engineer — Create & edit</option>
+                <option value="viewer">Viewer — Read only</option>
+              </select>
+            </Field>
+          </div>
+          <Btn variant="green" onClick={createUser}>+ Create User</Btn>
+
+          <SecTitle>All Users</SecTitle>
+          {loading ? <div style={{color:B.muted,padding:20,textAlign:"center"}}>Loading…</div>
+            : <div style={{background:"#fff",borderRadius:12,border:`1px solid ${B.border}`,overflow:"hidden"}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                  <thead>
+                    <tr style={{background:B.light}}>
+                      {["Name","Email","Role","Status","Last Login",""].map(h=>(
+                        <th key={h} style={{padding:"9px 12px",textAlign:"left",fontSize:11,
+                          fontWeight:700,color:B.muted,textTransform:"uppercase"}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map(u=>(
+                      <tr key={u.id} style={{borderTop:`1px solid ${B.border}`,opacity:u.active?1:.5}}>
+                        <td style={{padding:"9px 12px",fontWeight:600}}>{u.name}</td>
+                        <td style={{padding:"9px 12px",color:B.muted}}>{u.email}</td>
+                        <td style={{padding:"9px 12px"}}><RoleBadge role={u.role}/></td>
+                        <td style={{padding:"9px 12px"}}>
+                          <span style={{color:u.active?B.green:B.muted,fontWeight:700}}>
+                            {u.active?"Active":"Disabled"}
+                          </span>
+                        </td>
+                        <td style={{padding:"9px 12px",color:B.muted}}>{u.last_login?fmt(u.last_login):"Never"}</td>
+                        <td style={{padding:"9px 12px"}}>
+                          <button onClick={()=>toggleActive(u)}
+                            style={{border:`1px solid ${B.border}`,background:"#fff",borderRadius:6,
+                              padding:"4px 10px",cursor:"pointer",fontSize:12,color:B.muted}}>
+                            {u.active?"Disable":"Enable"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+          }
+        </div>
+      );
+    }
+
+    // ════════════════════════════════════════════════════════
+    // MAIN APP
+    // ════════════════════════════════════════════════════════
+    function App() {
+      const [currentUser,  setCurrentUser]  = useState(null);
+      const [authChecked,  setAuthChecked]  = useState(false);
+      const [tab,          setTab]          = useState("dashboard");
+      const [customers,    setCustomers]    = useState([]);
+      const [machines,     setMachines]     = useState([]);
+      const [calls,        setCalls]        = useState([]);
+      const [returns,      setReturns]      = useState([]);
+      const [models,       setModels]       = useState([]);
+      const [stats,        setStats]        = useState({});
+      const [loading,      setLoading]      = useState(false);
+      const [modal,        setModal]        = useState(null);
+      const [search,       setSearch]       = useState("");
+      const [filterStatus, setFilterStatus] = useState("all");
+
+      // Check existing session
+      useEffect(()=>{
+        (async()=>{
+          if (getToken()) {
+            try { const d = await GET("auth/me"); setCurrentUser(d.user); }
+            catch { clearToken(); }
+          }
+          setAuthChecked(true);
+        })();
+      },[]);
+
+      useEffect(()=>{ if(currentUser) loadAll(); },[currentUser]);
+
+      const loadAll = async () => {
+        setLoading(true);
+        try {
+          const [c,m,s,r,mdl,st] = await Promise.all([
+            GET("customers"),GET("machines"),GET("service-calls"),
+            GET("returns"),GET("models"),GET("stats"),
+          ]);
+          setCustomers(c);setMachines(m);setCalls(s);
+          setReturns(r);setModels(mdl);setStats(st);
+        } catch(e){ console.error(e); }
+        finally { setLoading(false); }
+      };
+
+      const handleLogout = async () => {
+        try { await POST("auth/logout",{}); } catch {}
+        clearToken(); setCurrentUser(null);
+      };
+
+      const refresh  = () => { setModal(null); loadAll(); };
+      const canEdit  = currentUser && ["admin","engineer"].includes(currentUser.role);
+      const isAdmin  = currentUser?.role==="admin";
+
+      const q = search.toLowerCase();
+      const filteredMachines  = machines.filter(m=>
+        (!q||m.model?.toLowerCase().includes(q)||m.mc_sl_no?.toLowerCase().includes(q)||m.customer_name?.toLowerCase().includes(q))
+        &&(filterStatus==="all"||m.status===filterStatus));
+      const filteredCalls     = calls.filter(sc=>!q||sc.customer_name?.toLowerCase().includes(q)||sc.machine_model?.toLowerCase().includes(q)||sc.symptom?.toLowerCase().includes(q));
+      const filteredCustomers = customers.filter(c=>!q||c.name?.toLowerCase().includes(q)||c.tel?.includes(q));
+
+      const deleteMachine = async (id) => {
+        if (!window.confirm("Delete this machine? This cannot be undone.")) return;
+        try { await DEL(`machines/${id}`); loadAll(); } catch(e) { alert(e.message); }
+      };
+      const deleteCall = async (id) => {
+        if (!window.confirm("Delete this service call? This cannot be undone.")) return;
+        try { await DEL(`service-calls/${id}`); loadAll(); } catch(e) { alert(e.message); }
+      };
+      const deleteCustomer = async (id) => {
+        if (!window.confirm("Delete this customer? This will NOT delete their machines or service calls.")) return;
+        try { await DEL(`customers/${id}`); loadAll(); } catch(e) { alert(e.message); }
+      };
+      const deleteReturn = async (id) => {
+        if (!window.confirm("Delete this return record? This cannot be undone.")) return;
+        try { await DEL(`returns/${id}`); loadAll(); } catch(e) { alert(e.message); }
+      };
+
+      const Nav = ({id,icon,label}) => (
+        <button onClick={()=>{setTab(id);setSearch("");setFilterStatus("all");}}
+          style={{background:tab===id?B.blue:"transparent",color:tab===id?"#fff":B.muted,
+            border:"none",borderRadius:10,padding:"10px 14px",cursor:"pointer",
+            display:"flex",alignItems:"center",gap:8,fontSize:14,fontWeight:600,
+            width:"100%",textAlign:"left",transition:"all .15s"}}>
+          {icon} {label}
+        </button>
+      );
+
+      if (!authChecked) return (
+        <div style={{display:"flex",height:"100vh",alignItems:"center",justifyContent:"center",background:B.light}}>
+          <div style={{color:B.muted}}>Loading…</div>
+        </div>
+      );
+
+      if (!currentUser) return <LoginScreen onLogin={u=>setCurrentUser(u)}/>;
+
+      return (
+        <div style={{display:"flex",height:"100vh",background:B.light,color:B.text,overflow:"hidden"}}>
+
+          {/* SIDEBAR */}
+          <aside style={{width:220,background:"#fff",borderRight:`1px solid ${B.border}`,
+            display:"flex",flexDirection:"column",flexShrink:0}}>
+            <div style={{padding:"18px 16px 14px",borderBottom:`1px solid ${B.border}`}}>
+              <div style={{fontFamily:"Georgia,serif",fontSize:15,fontWeight:800,color:B.blue}}>ECH EL BEE</div>
+              <div style={{fontSize:10,color:B.accent,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase"}}>
+                Pixel 2 Paper · FSM
+              </div>
+            </div>
+            <nav style={{padding:10,flex:1,display:"flex",flexDirection:"column",gap:2}}>
+              <Nav id="dashboard" icon="📊" label="Dashboard"/>
+              <Nav id="machines"  icon="🖨️" label="Machines"/>
+              <Nav id="customers" icon="👥" label="Customers"/>
+              <Nav id="service"   icon="🔧" label="Service Calls"/>
+              <Nav id="returns"   icon="📦" label="Returns"/>
+              {isAdmin && <Nav id="users" icon="⚙️" label="Users & Roles"/>}
+            </nav>
+            {canEdit && (
+              <div style={{padding:"10px 12px",borderTop:`1px solid ${B.border}`,display:"flex",flexDirection:"column",gap:6}}>
+                <Btn small full variant="green"  onClick={()=>setModal({type:"install"})}>+ New Installation</Btn>
+                <Btn small full variant="accent" onClick={()=>setModal({type:"service"})}>+ Service Call</Btn>
+                <Btn small full variant="ghost"  onClick={()=>setModal({type:"return"})}>📦 Return Machine</Btn>
+              </div>
+            )}
+            <div style={{padding:"12px 14px",borderTop:`1px solid ${B.border}`,display:"flex",alignItems:"center",gap:10}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:700,fontSize:13,color:B.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                  {currentUser.name}
+                </div>
+                <RoleBadge role={currentUser.role}/>
+              </div>
+              <button onClick={handleLogout} title="Sign out"
+                style={{border:`1px solid ${B.border}`,background:"#fff",borderRadius:8,
+                  padding:"6px 8px",cursor:"pointer",fontSize:14,color:B.muted}}>⏻</button>
+            </div>
+          </aside>
+
+          {/* MAIN */}
+          <main style={{flex:1,overflowY:"auto",padding:24}}>
+            {loading && <div style={{textAlign:"center",padding:40,color:B.muted}}>Loading data…</div>}
+            {!loading && <>
+
+              {/* DASHBOARD */}
+              {tab==="dashboard" && <>
+                <h1 style={{margin:"0 0 4px",fontFamily:"Georgia,serif",color:B.blue,fontSize:26}}>Dashboard</h1>
+                <p style={{margin:"0 0 24px",color:B.muted,fontSize:14}}>Fleet & service overview — Ech El Bee Pixel 2 Paper</p>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:12,marginBottom:28}}>
+                  {[["🖨️","Total Machines",stats.machines,B.blue],["✅","Installed",stats.installed,B.green],
+                    ["📦","Returned",stats.returned,B.orange],["🔄","On AMC",stats.on_amc,"#7c3aed"],
+                    ["👥","Customers",stats.customers,B.blue],["🔧","All Calls",stats.total_calls,B.accent],
+                    ["📅","This Month",stats.month_calls,"#0891b2"]].map(([icon,label,value,color])=>(
+                    <div key={label} style={{background:"#fff",borderRadius:14,padding:"14px 16px",border:`1px solid ${B.border}`}}>
+                      <div style={{fontSize:22}}>{icon}</div>
+                      <div style={{fontSize:28,fontWeight:800,color,margin:"4px 0 2px",lineHeight:1}}>{value||0}</div>
+                      <div style={{fontSize:12,color:B.muted}}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+                <h2 style={{fontSize:16,color:B.blue,margin:"0 0 12px"}}>Recent Service Calls</h2>
+                {calls.length===0
+                  ? <div style={{background:"#fff",borderRadius:12,padding:32,textAlign:"center",color:B.muted,border:`1px dashed ${B.border}`}}>No service calls yet.</div>
+                  : <div style={{background:"#fff",borderRadius:12,border:`1px solid ${B.border}`,overflow:"hidden"}}>
+                      <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                        <thead><tr style={{background:B.light}}>{["Date","Customer","Machine","Symptom","Engineer"].map(h=>(
+                          <th key={h} style={{padding:"9px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:B.muted,textTransform:"uppercase"}}>{h}</th>
+                        ))}</tr></thead>
+                        <tbody>{calls.slice(0,10).map(sc=>(
+                          <tr key={sc.id} style={{borderTop:`1px solid ${B.border}`}}>
+                            <td style={{padding:"9px 14px",whiteSpace:"nowrap"}}>{fmt(sc.date)}</td>
+                            <td style={{padding:"9px 14px"}}>{sc.customer_name||"—"}</td>
+                            <td style={{padding:"9px 14px"}}>{sc.machine_model||"—"}</td>
+                            <td style={{padding:"9px 14px",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sc.symptom}</td>
+                            <td style={{padding:"9px 14px"}}>{sc.eng_name||"—"}</td>
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                }
+              </>}
+
+              {/* MACHINES */}
+              {tab==="machines" && <>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
+                  <h1 style={{margin:0,fontFamily:"Georgia,serif",color:B.blue,fontSize:24}}>Machines ({filteredMachines.length})</h1>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                    <input style={{...baseInp,width:180}} placeholder="Search…" value={search} onChange={e=>setSearch(e.target.value)}/>
+                    <select style={{...baseInp,width:145}} value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}>
+                      <option value="all">All Status</option>
+                      <option value="installed">Installed</option>
+                      <option value="returned">Returned</option>
+                      <option value="on_amc">On AMC</option>
+                    </select>
+                    {canEdit && <Btn variant="green" onClick={()=>setModal({type:"install"})}>+ New</Btn>}
+                  </div>
+                </div>
+                {filteredMachines.length===0
+                  ? <div style={{background:"#fff",borderRadius:12,padding:48,textAlign:"center",color:B.muted,border:`1px dashed ${B.border}`}}>
+                      <div style={{fontSize:40,marginBottom:10}}>🖨️</div>No machines found.
+                    </div>
+                  : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14}}>
+                      {filteredMachines.map(m=>(
+                        <div key={m.id} style={{background:"#fff",borderRadius:14,border:`1px solid ${B.border}`,padding:16,transition:"box-shadow .15s"}}
+                          onMouseEnter={e=>e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,.08)"}
+                          onMouseLeave={e=>e.currentTarget.style.boxShadow="none"}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                            <div>
+                              <div style={{fontWeight:800,fontSize:16,color:B.blue,fontFamily:"Georgia,serif"}}>{m.model}</div>
+                              <div style={{fontSize:12,color:B.muted}}>S/N: {m.mc_sl_no||"—"}</div>
+                            </div>
+                            <Badge status={m.status}/>
+                          </div>
+                          <div style={{fontSize:13,marginBottom:3}}>👤 {m.customer_name||"—"}</div>
+                          <div style={{fontSize:12,color:B.muted}}>Installed: {fmt(m.installed_on)}</div>
+                          {m.warranty_expiry&&<div style={{fontSize:12,color:B.muted}}>Warranty: {fmt(m.warranty_expiry)}</div>}
+                          {canEdit && (
+                            <div style={{marginTop:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                              <Btn small variant="accent" onClick={()=>setModal({type:"service",data:{machine:m}})}>+ Service</Btn>
+                              {isAdmin && <Btn small variant="danger" onClick={()=>deleteMachine(m.id)}>🗑 Delete</Btn>}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                }
+              </>}
+
+              {/* CUSTOMERS */}
+              {tab==="customers" && <>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18}}>
+                  <h1 style={{margin:0,fontFamily:"Georgia,serif",color:B.blue,fontSize:24}}>Customers ({filteredCustomers.length})</h1>
+                  <input style={{...baseInp,width:200}} placeholder="Search…" value={search} onChange={e=>setSearch(e.target.value)}/>
+                </div>
+                {filteredCustomers.length===0
+                  ? <div style={{background:"#fff",borderRadius:12,padding:48,textAlign:"center",color:B.muted,border:`1px dashed ${B.border}`}}>
+                      Customers are created automatically when you add an installation or service call.
+                    </div>
+                  : <div style={{background:"#fff",borderRadius:12,border:`1px solid ${B.border}`,overflow:"hidden"}}>
+                      <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                        <thead><tr style={{background:B.light}}>{["Customer","Contact","Phone","Email","Added",...(isAdmin?[""]:[])].map(h=>(
+                          <th key={h} style={{padding:"9px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:B.muted,textTransform:"uppercase"}}>{h}</th>
+                        ))}</tr></thead>
+                        <tbody>{filteredCustomers.map(c=>(
+                          <tr key={c.id} style={{borderTop:`1px solid ${B.border}`}}>
+                            <td style={{padding:"9px 14px",fontWeight:700,color:B.blue}}>{c.name}</td>
+                            <td style={{padding:"9px 14px"}}>{c.contact_person||"—"}</td>
+                            <td style={{padding:"9px 14px"}}>{c.tel||"—"}</td>
+                            <td style={{padding:"9px 14px"}}>{c.email||"—"}</td>
+                            <td style={{padding:"9px 14px",color:B.muted}}>{fmt(c.created_at)}</td>
+                            {isAdmin && <td style={{padding:"9px 14px"}}><Btn small variant="danger" onClick={()=>deleteCustomer(c.id)}>🗑</Btn></td>}
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                }
+              </>}
+
+              {/* SERVICE CALLS */}
+              {tab==="service" && <>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
+                  <h1 style={{margin:0,fontFamily:"Georgia,serif",color:B.blue,fontSize:24}}>Service Calls ({calls.length})</h1>
+                  <div style={{display:"flex",gap:8}}>
+                    <input style={{...baseInp,width:200}} placeholder="Search…" value={search} onChange={e=>setSearch(e.target.value)}/>
+                    {canEdit && <Btn variant="accent" onClick={()=>setModal({type:"service"})}>+ New Call</Btn>}
+                  </div>
+                </div>
+                {filteredCalls.length===0
+                  ? <div style={{background:"#fff",borderRadius:12,padding:48,textAlign:"center",color:B.muted,border:`1px dashed ${B.border}`}}>
+                      <div style={{fontSize:40,marginBottom:10}}>🔧</div>No service calls yet.
+                    </div>
+                  : <div style={{background:"#fff",borderRadius:12,border:`1px solid ${B.border}`,overflow:"hidden"}}>
+                      <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                        <thead><tr style={{background:B.light}}>{["Date","Customer","Model","S/N","Symptom","Action","Engineer","Billable",...(isAdmin?[""]:[])].map(h=>(
+                          <th key={h} style={{padding:"9px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:B.muted,textTransform:"uppercase"}}>{h}</th>
+                        ))}</tr></thead>
+                        <tbody>{filteredCalls.map(sc=>(
+                          <tr key={sc.id} style={{borderTop:`1px solid ${B.border}`}}>
+                            <td style={{padding:"9px 14px",whiteSpace:"nowrap"}}>{fmt(sc.date)}</td>
+                            <td style={{padding:"9px 14px"}}>{sc.customer_name||"—"}</td>
+                            <td style={{padding:"9px 14px"}}>{sc.machine_model||"—"}</td>
+                            <td style={{padding:"9px 14px",color:B.muted}}>{sc.mc_sl_no||"—"}</td>
+                            <td style={{padding:"9px 14px",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sc.symptom}</td>
+                            <td style={{padding:"9px 14px",maxWidth:140,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sc.action||"—"}</td>
+                            <td style={{padding:"9px 14px"}}>{sc.eng_name||"—"}</td>
+                            <td style={{padding:"9px 14px"}}>{sc.billable?<Badge status="faulty"/>:<span style={{color:B.muted}}>No</span>}</td>
+                            {isAdmin && <td style={{padding:"9px 14px"}}><Btn small variant="danger" onClick={()=>deleteCall(sc.id)}>🗑</Btn></td>}
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                }
+              </>}
+
+              {/* RETURNS */}
+              {tab==="returns" && <>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18}}>
+                  <h1 style={{margin:0,fontFamily:"Georgia,serif",color:B.blue,fontSize:24}}>Returns ({returns.length})</h1>
+                  {canEdit && <Btn variant="danger" onClick={()=>setModal({type:"return"})}>📦 Record Return</Btn>}
+                </div>
+                {returns.length===0
+                  ? <div style={{background:"#fff",borderRadius:12,padding:48,textAlign:"center",color:B.muted,border:`1px dashed ${B.border}`}}>
+                      <div style={{fontSize:40,marginBottom:10}}>📦</div>No returns recorded yet.
+                    </div>
+                  : <div style={{background:"#fff",borderRadius:12,border:`1px solid ${B.border}`,overflow:"hidden"}}>
+                      <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                        <thead><tr style={{background:B.light}}>{["Return Date","Customer","Machine","S/N","Reason","Condition","Collected By",...(isAdmin?[""]:[])].map(h=>(
+                          <th key={h} style={{padding:"9px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:B.muted,textTransform:"uppercase"}}>{h}</th>
+                        ))}</tr></thead>
+                        <tbody>{returns.map(ret=>(
+                          <tr key={ret.id} style={{borderTop:`1px solid ${B.border}`}}>
+                            <td style={{padding:"9px 14px"}}>{fmt(ret.return_date)}</td>
+                            <td style={{padding:"9px 14px"}}>{ret.customer_name||"—"}</td>
+                            <td style={{padding:"9px 14px"}}>{ret.machine_model||"—"}</td>
+                            <td style={{padding:"9px 14px",color:B.muted}}>{ret.mc_sl_no||"—"}</td>
+                            <td style={{padding:"9px 14px"}}>{ret.reason||"—"}</td>
+                            <td style={{padding:"9px 14px"}}>{ret.condition}</td>
+                            <td style={{padding:"9px 14px"}}>{ret.collected_by||"—"}</td>
+                            {isAdmin && <td style={{padding:"9px 14px"}}><Btn small variant="danger" onClick={()=>deleteReturn(ret.id)}>🗑</Btn></td>}
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                }
+              </>}
+
+              {/* USERS */}
+              {tab==="users" && isAdmin && <UserManager/>}
+
+            </>}
+          </main>
+
+          {/* MODALS */}
+          {modal?.type==="install" && (
+            <Modal title="📋 New Installation Report" onClose={()=>setModal(null)} wide>
+              <InstallForm customers={customers} models={models} onModelsChange={setModels}
+                onSave={refresh} onClose={()=>setModal(null)} currentUser={currentUser}/>
+            </Modal>
+          )}
+          {modal?.type==="service" && (
+            <Modal title="🔧 Service Call Report" onClose={()=>setModal(null)} wide>
+              <ServiceForm customers={customers} machines={machines} models={models} onModelsChange={setModels}
+                onSave={refresh} onClose={()=>setModal(null)}
+                prefillMachine={modal.data?.machine} currentUser={currentUser}/>
+            </Modal>
+          )}
+          {modal?.type==="return" && (
+            <Modal title="📦 Machine Return" onClose={()=>setModal(null)}>
+              <ReturnForm customers={customers} machines={machines} onSave={refresh} onClose={()=>setModal(null)}/>
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>

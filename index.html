@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ech El Bee - Seamless Solutions for Documents and IT Infrastructure</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Archivo+Black&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tech-blue: #0066FF;
+            --deep-navy: #0A1929;
+            --electric-cyan: #00D4FF;
+            --warm-orange: #FF6B35;
+            --pure-white: #FFFFFF;
+            --soft-gray: #F5F7FA;
+            --text-primary: #1A2332;
+            --text-secondary: #64748B;
+            --shadow-sm: 0 2px 8px rgba(0, 102, 255, 0.08);
+            --shadow-md: 0 8px 24px rgba(0, 102, 255, 0.12);
+            --shadow-lg: 0 16px 48px rgba(0, 102, 255, 0.16);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background: var(--pure-white);
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 0.6rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(0, 102, 255, 0.08);
+        }
+
+        .nav-logo {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-logo img {
+            height: 90px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .nav-logo-text {
+            display: flex;
+            flex-direction: column;
+            margin-left: 0.75rem;
+            line-height: 1.1;
+        }
+
+        .nav-logo-text .brand-main {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: var(--deep-navy);
+            letter-spacing: 0.08em;
+        }
+
+        .nav-logo-text .brand-sub {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--tech-blue);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--tech-blue);
+        }
+
+        .nav-cta {
+            background: linear-gradient(135deg, var(--tech-blue) 0%, #0052CC 100%);
+            color: white !important;
+            padding: 0.6rem 1.4rem;
+            border-radius: 8px;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(0, 102, 255, 0.3);
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 102, 255, 0.4);
+            color: white !important;
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 50%, #FAFBFF 100%);
+            padding: 6rem 2rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 80%;
+            height: 150%;
+            background: radial-gradient(ellipse, rgba(0, 102, 255, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0, 102, 255, 0.08);
+            color: var(--tech-blue);
+            padding: 0.5rem 1.2rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 102, 255, 0.15);
+        }
+
+        .hero h1 {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 400;
+            color: var(--deep-navy);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            max-width: 800px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--tech-blue) 0%, var(--electric-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 2.5rem;
+            line-height: 1.7;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--tech-blue) 0%, #0052CC 100%);
+            color: white;
+            padding: 0.9rem 2.2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 102, 255, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 102, 255, 0.45);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--tech-blue);
+            padding: 0.9rem 2.2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            border: 2px solid var(--tech-blue);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--tech-blue);
+            color: white;
+        }
+
+        .hero-features {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-top: 4rem;
+            padding-top: 3rem;
+            border-top: 1px solid rgba(0, 102, 255, 0.1);
+        }
+
+        .hero-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .hero-feature-icon {
+            font-size: 1.8rem;
+        }
+
+        .hero-feature-text strong {
+            display: block;
+            font-weight: 700;
+            color: var(--deep-navy);
+            font-size: 0.95rem;
+        }
+
+        .hero-feature-text span {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* SECTIONS */
+        section {
+            padding: 6rem 2rem;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 4rem;
+        }
+
+        .section-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(0, 102, 255, 0.1) 0%, rgba(0, 212, 255, 0.1) 100%);
+            color: var(--tech-blue);
+            padding: 0.5rem 1.2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 3rem;
+            font-weight: 400;
+            color: var(--deep-navy);
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* SERVICES */
+        .services {
+            background: var(--soft-gray);
+        }
+
+        .services-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .service-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 102, 255, 0.06);
+        }
+
+        .service-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .service-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-card h3 {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 400;
+            color: var(--deep-navy);
+            margin-bottom: 1rem;
+        }
+
+        .service-card p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .service-card ul {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .service-card ul li {
+            padding: 0.4rem 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .service-card ul li::before {
+            content: '✓ ';
+            color: var(--tech-blue);
+            font-weight: 700;
+        }
+
+        .service-link {
+            color: var(--tech-blue);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* WHY US */
+        .why-us {
+            background: var(--deep-navy);
+            color: white;
+        }
+
+        .why-us .section-tag {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--electric-cyan);
+        }
+
+        .why-us .section-header h2 {
+            color: white;
+        }
+
+        .why-us .section-header p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .why-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .why-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .why-card:hover {
+            background: rgba(0, 102, 255, 0.15);
+            border-color: rgba(0, 102, 255, 0.4);
+            transform: translateY(-4px);
+        }
+
+        .why-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .why-card h3 {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: white;
+            margin-bottom: 0.7rem;
+        }
+
+        .why-card p {
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* PRODUCTS */
+        .products {
+            background: var(--soft-gray);
+        }
+
+        .product-tabs {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 12px;
+            display: inline-flex;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tab-button {
+            padding: 0.7rem 2rem;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background: var(--tech-blue);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 102, 255, 0.3);
+        }
+
+        .tab-content-wrapper {
+            display: none;
+        }
+
+        .tab-content-wrapper.active {
+            display: block;
+        }
+
+        .product-table {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            overflow-x: auto;
+        }
+
+        .product-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .product-table th {
+            background: linear-gradient(135deg, var(--tech-blue) 0%, #0052CC 100%);
+            color: white;
+            padding: 1rem 1.2rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .product-table td {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid rgba(0, 102, 255, 0.06);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            vertical-align: middle;
+        }
+
+        .product-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .product-table tr:hover td {
+            background: rgba(0, 102, 255, 0.02);
+        }
+
+        .category-header {
+            background: rgba(0, 102, 255, 0.06) !important;
+            font-weight: 700;
+            color: var(--tech-blue) !important;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.75rem 1.2rem !important;
+        }
+
+        .brochure-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--tech-blue) 0%, #0052CC 100%);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .brochure-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+        }
+
+        .new-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-right: 0.4rem;
+            vertical-align: middle;
+        }
+
+        .product-note {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        /* Product image in table */
+        .product-img {
+            width: 90px;
+            height: 75px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .product-img:hover {
+            transform: scale(1.12);
+            opacity: 0.85;
+        }
+
+        /* SERVICE CALL */
+        .service-call {
+            background: white;
+        }
+
+        .form-container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: var(--soft-gray);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.85rem 1.1rem;
+            border: 1.5px solid rgba(0, 102, 255, 0.15);
+            border-radius: 10px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+            color: var(--text-primary);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--tech-blue);
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--tech-blue) 0%, #0052CC 100%);
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 102, 255, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 102, 255, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .form-message {
+            display: none;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .form-message.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .form-message.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #DC2626;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* CONTACT */
+        .contact {
+            background: var(--soft-gray);
+        }
+
+        .contact-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        .contact-info h3 {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 400;
+            color: var(--deep-navy);
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .contact-item-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .contact-item h4 {
+            font-weight: 700;
+            color: var(--deep-navy);
+            margin-bottom: 0.3rem;
+        }
+
+        .contact-item p, .contact-item a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .contact-form {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* FOOTER */
+        footer {
+            background: var(--deep-navy);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 3rem 2rem 1.5rem;
+        }
+
+        .footer-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .footer-brand p {
+            margin-top: 1rem;
+            line-height: 1.7;
+            font-size: 0.9rem;
+        }
+
+        .footer-logo {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        footer h4 {
+            color: white;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        footer ul {
+            list-style: none;
+        }
+
+        footer ul li {
+            margin-bottom: 0.6rem;
+        }
+
+        footer ul li a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        footer ul li a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero h1 { font-size: 2.5rem; }
+            .hero-features { grid-template-columns: repeat(2, 1fr); }
+            .services-grid { grid-template-columns: 1fr; }
+            .why-grid { grid-template-columns: 1fr; }
+            .contact-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .section-header h2 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <a href="#home" class="nav-logo">
+            <img src="images/echelbee-logo.jpg" alt="Ech El Bee Pixel 2 Paper">
+            <div class="nav-logo-text">
+                <span class="brand-main">ECH EL BEE</span>
+                <span class="brand-sub">Pixel 2 Paper</span>
+            </div>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#products">Products</a></li>
+            <li><a href="#service-call">Service Call</a></li>
+            <li><a href="#why-us">Why Us</a></li>
+            <li><a href="#contact" class="nav-cta">Get Started</a></li>
+        </ul>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="hero-badge">🚀 India's Trusted Technology Partner</div>
+            <h1>Seamless Solutions for Documents and <span>IT Infrastructure</span></h1>
+            <p>Your one-stop partner for advanced printing solutions and end-to-end IT services. From high-performance printers and MFDs to robust IT infrastructure—we deliver reliable, efficient, and future-ready technology.</p>
+            <div class="hero-buttons">
+                <a href="#contact" class="btn-primary">Request a Quote</a>
+                <a href="#services" class="btn-secondary">Our Services</a>
+            </div>
+            <div class="hero-features">
+                <div class="hero-feature">
+                    <span class="hero-feature-icon">🖨️</span>
+                    <div class="hero-feature-text">
+                        <strong>Printing Solutions</strong>
+                        <span>Advanced printers & MFDs for modern businesses</span>
+                    </div>
+                </div>
+                <div class="hero-feature">
+                    <span class="hero-feature-icon">💻</span>
+                    <div class="hero-feature-text">
+                        <strong>IT Infrastructure</strong>
+                        <span>Complete networking & hardware setup</span>
+                    </div>
+                </div>
+                <div class="hero-feature">
+                    <span class="hero-feature-icon">🔧</span>
+                    <div class="hero-feature-text">
+                        <strong>Expert Support</strong>
+                        <span>AMC services & rapid troubleshooting</span>
+                    </div>
+                </div>
+                <div class="hero-feature">
+                    <span class="hero-feature-icon">⚡</span>
+                    <div class="hero-feature-text">
+                        <strong>Fast Response</strong>
+                        <span>Quick deployment & optimization</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section class="services" id="services">
+        <div class="section-header">
+            <span class="section-tag">OUR SERVICES</span>
+            <h2>Complete Technology Solutions</h2>
+            <p>From printing infrastructure to complete IT systems, we provide everything your business needs to operate efficiently</p>
+        </div>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">🖨️</div>
+                <h3>Printing Solutions</h3>
+                <p>High-performance printers and multifunction devices designed for modern business demands</p>
+                <ul>
+                    <li>Enterprise-grade printers & MFDs</li>
+                    <li>Document management systems</li>
+                    <li>Customized printing workflows</li>
+                    <li>Ink & toner optimization</li>
+                </ul>
+                <a href="#contact" class="service-link">Learn More →</a>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">💻</div>
+                <h3>IT Infrastructure</h3>
+                <p>Complete hardware setup, networking solutions, and infrastructure management</p>
+                <ul>
+                    <li>Network design & deployment</li>
+                    <li>Server setup & configuration</li>
+                    <li>Hardware procurement & installation</li>
+                    <li>Cloud integration services</li>
+                </ul>
+                <a href="#contact" class="service-link">Learn More →</a>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🛠️</div>
+                <h3>Support & AMC</h3>
+                <p>Proactive maintenance and expert support to keep your systems running without disruption</p>
+                <ul>
+                    <li>Annual maintenance contracts</li>
+                    <li>24/7 priority support</li>
+                    <li>Preventive maintenance</li>
+                    <li>Rapid troubleshooting</li>
+                </ul>
+                <a href="#contact" class="service-link">Learn More →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- WHY US -->
+    <section class="why-us" id="why-us">
+        <div class="section-header">
+            <span class="section-tag">WHY CHOOSE US</span>
+            <h2>Built for Your Success</h2>
+            <p>Smart solutions, easy setup, and expert support—all from one trusted partner</p>
+        </div>
+        <div class="why-grid">
+            <div class="why-card">
+                <div class="why-icon">🎯</div>
+                <h3>10+ Years Experience</h3>
+                <p>Over a decade of expertise understanding business needs and delivering solutions that work</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon">⚡</div>
+                <h3>Fast & Optimized</h3>
+                <p>Quick service response and efficient solutions built for speed and performance</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon">🤝</div>
+                <h3>One Contact, Total Support</h3>
+                <p>Printing or IT, hardware or networks—everything you need from one reliable partner</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon">📱</div>
+                <h3>Full Responsive Service</h3>
+                <p>Fast, reliable service with expert support and AMC plans that keep systems running smoothly</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon">📈</div>
+                <h3>Customized & Scalable</h3>
+                <p>Tailored printing and IT setups designed to grow with your business needs</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon">🔧</div>
+                <h3>Expert Support & AMC</h3>
+                <p>Proactive maintenance and priority troubleshooting from skilled professionals</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section class="products" id="products">
+        <div class="section-header">
+            <span class="section-tag">OUR PRODUCTS</span>
+            <h2>Document Solutions Range</h2>
+            <p>Explore our range of Multi-Function Devices (MFDs) and high-performance printers</p>
+        </div>
+        <div class="product-tabs">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('monochrome', this)">Monochrome</button>
+                <button class="tab-button" onclick="switchTab('color', this)">Color</button>
+            </div>
+
+            <!-- Monochrome Tab -->
+            <div id="monochrome" class="tab-content-wrapper active">
+                <div class="product-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="min-width:110px; text-align:center;">Image</th>
+                                <th>Model</th>
+                                <th>Type</th>
+                                <th>Speed</th>
+                                <th>Paper Size</th>
+                                <th>Functions</th>
+                                <th>Brochure</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- A3 Monochrome MFDs (IM Series) -->
+                            <tr><td colspan="7" class="category-header">A3 Monochrome MFDs (IM Series)</td></tr>
+                            <tr>
+                                <td rowspan="6" style="text-align:center; vertical-align:middle; padding:10px; background:#fff;">
+                                    <a href="images/im-series.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/im-series.png" alt="IM Series MFD" class="product-img"></a>
+                                </td>
+                                <td>IM 2500</td>
+                                <td>Monochrome</td>
+                                <td>25 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/im2500-6000-brochure.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <tr>
+                                <td>IM 3000</td>
+                                <td>Monochrome</td>
+                                <td>30 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/im2500-6000-brochure.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <tr>
+                                <td>IM 3500</td>
+                                <td>Monochrome</td>
+                                <td>35 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/im2500-6000-brochure.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <tr>
+                                <td>IM 4000</td>
+                                <td>Monochrome</td>
+                                <td>40 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/im2500-6000-brochure.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <tr>
+                                <td>IM 5000</td>
+                                <td>Monochrome</td>
+                                <td>50 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/im2500-6000-brochure.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <tr>
+                                <td>IM 6000</td>
+                                <td>Monochrome</td>
+                                <td>60 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/im2500-6000-brochure.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <!-- IM 2702 -->
+                            <tr>
+                                <td style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/im2702.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/im2702.png" alt="IM 2702" class="product-img"></a>
+                                </td>
+                                <td>IM 2702</td>
+                                <td>Monochrome</td>
+                                <td>27 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/im2702-brochure.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <!-- M 2701 -->
+                            <tr>
+                                <td style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/m2701.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/m2701.png" alt="M 2701" class="product-img"></a>
+                                </td>
+                                <td>M 2701</td>
+                                <td>Monochrome</td>
+                                <td>27 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/m2701-brochure.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <!-- New M Series -->
+                            <tr><td colspan="7" class="category-header">New Monochrome A3 MFDs (M Series)</td></tr>
+                            <tr>
+                                <td rowspan="2" style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/m-series.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/m-series.png" alt="M Series MFD" class="product-img"></a>
+                                </td>
+                                <td><span class="new-badge">New</span>M 2310N</td>
+                                <td>Monochrome</td>
+                                <td>23 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF (Optional)</td>
+                                <td><a href="brochures/Ricoh_M_2310N_M_2810N.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <tr>
+                                <td><span class="new-badge">New</span>M 2810N</td>
+                                <td>Monochrome</td>
+                                <td>28 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF (Optional)</td>
+                                <td><a href="brochures/Ricoh_M_2310N_M_2810N.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <!-- MP Series -->
+                            <tr><td colspan="7" class="category-header">Older Monochrome A3 MFDs (MP Series)</td></tr>
+                            <tr>
+                                <td rowspan="3" style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/mp2014.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/mp2014.png" alt="MP 2014 Series" class="product-img"></a>
+                                </td>
+                                <td>MP 2014</td>
+                                <td>Monochrome</td>
+                                <td>20 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan</td>
+                                <td><a href="brochures/Ricoh_MP_2014.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <tr>
+                                <td>MP 2014D</td>
+                                <td>Monochrome</td>
+                                <td>20 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan</td>
+                                <td><a href="brochures/Ricoh_MP_2014.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <tr>
+                                <td>MP 2014AD</td>
+                                <td>Monochrome</td>
+                                <td>20 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/Ricoh_MP_2014.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <!-- A4 Monochrome Printers -->
+                            <tr><td colspan="7" class="category-header">A4 Monochrome Printers</td></tr>
+                            <tr>
+                                <td style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/p311.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/p311.png" alt="P 311" class="product-img"></a>
+                                </td>
+                                <td>P 311</td>
+                                <td>Monochrome</td>
+                                <td>32 ppm</td>
+                                <td>A4 to A6</td>
+                                <td>Print</td>
+                                <td><a href="brochures/RICOH_P_311_M_320F.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/m320f.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/m320f.png" alt="M 320F" class="product-img"></a>
+                                </td>
+                                <td>M 320F</td>
+                                <td>Monochrome</td>
+                                <td>32 ppm</td>
+                                <td>A4 to A6</td>
+                                <td>Print / Copy / Scan</td>
+                                <td><a href="brochures/RICOH_P_311_M_320F.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Color Tab -->
+            <div id="color" class="tab-content-wrapper">
+                <div class="product-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="min-width:110px; text-align:center;">Image</th>
+                                <th>Model</th>
+                                <th>Type</th>
+                                <th>Speed</th>
+                                <th>Paper Size</th>
+                                <th>Functions</th>
+                                <th>Brochure</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="7" class="category-header">A3 Color MFDs (IM C Series)</td></tr>
+                            <!-- IM C2010/C2010AEX -->
+                            <tr>
+                                <td style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/imc2010.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/imc2010.png" alt="IM C2010" class="product-img"></a>
+                                </td>
+                                <td>IM C2010/C2010AEX</td>
+                                <td>Color</td>
+                                <td>20 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/RICOH_IM_Cxx10_Series_V2_compressed.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <!-- IM C2510 -->
+                            <tr>
+                                <td style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/imc2510.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/imc2510.png" alt="IM C2510" class="product-img"></a>
+                                </td>
+                                <td>IM C2510</td>
+                                <td>Color</td>
+                                <td>25 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/RICOH_IM_Cxx10_Series_V2_compressed.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <!-- IM C3010/C3010EX -->
+                            <tr>
+                                <td style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/imc3010.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/imc3010.png" alt="IM C3010" class="product-img"></a>
+                                </td>
+                                <td>IM C3010/C3010EX</td>
+                                <td>Color</td>
+                                <td>30 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/RICOH_IM_Cxx10_Series_V2_compressed.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <!-- IM C3510/C3510EX -->
+                            <tr>
+                                <td style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/imc3510.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/imc3510.png" alt="IM C3510" class="product-img"></a>
+                                </td>
+                                <td>IM C3510/C3510EX</td>
+                                <td>Color</td>
+                                <td>35 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/RICOH_IM_Cxx10_Series_V2_compressed.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <!-- IM C4510 -->
+                            <tr>
+                                <td style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/imc4510.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/imc4510.png" alt="IM C4510" class="product-img"></a>
+                                </td>
+                                <td>IM C4510</td>
+                                <td>Color</td>
+                                <td>45 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/RICOH_IM_Cxx10_Series_V2_compressed.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <!-- IM C6010 -->
+                            <tr>
+                                <td style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/imc6010.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/imc6010.png" alt="IM C6010" class="product-img"></a>
+                                </td>
+                                <td>IM C6010</td>
+                                <td>Color</td>
+                                <td>60 ppm</td>
+                                <td>A3 to A6</td>
+                                <td>Print / Copy / Scan / ARDF</td>
+                                <td><a href="brochures/RICOH_IM_Cxx10_Series_V2_compressed.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <tr><td colspan="7" class="category-header">A4 Color Printers/MFDs</td></tr>
+                            <!-- P C311W -->
+                            <tr>
+                                <td style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/pc311w.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/pc311w.png" alt="P C311W" class="product-img"></a>
+                                </td>
+                                <td>P C311W</td>
+                                <td>Color</td>
+                                <td>25 ppm</td>
+                                <td>A4</td>
+                                <td>Print</td>
+                                <td><a href="brochures/pc311w-mc251fw-brochure.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                            <!-- M C251FW -->
+                            <tr>
+                                <td style="text-align:center; vertical-align:middle; padding:10px;">
+                                    <a href="images/mc251fw.png" target="_blank" style="cursor:zoom-in;display:block;"><img src="images/mc251fw.png" alt="M C251FW" class="product-img"></a>
+                                </td>
+                                <td>M C251FW</td>
+                                <td>Color</td>
+                                <td>25 ppm</td>
+                                <td>A4</td>
+                                <td>Print / Copy / Scan</td>
+                                <td><a href="brochures/pc311w-mc251fw-brochure.pdf" class="brochure-btn" target="_blank" download>⬇ Brochure</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+        <p class="product-note">*Please contact us for detailed specifications, competitive comparisons, and current pricing.</p>
+    </section>
+
+    <!-- SERVICE CALL -->
+    <section class="service-call" id="service-call">
+        <div class="section-header">
+            <span class="section-tag">SERVICE REQUEST</span>
+            <h2>Book a Service Call</h2>
+            <p>Need technical support? Fill out the form below and our team will get back to you shortly</p>
+        </div>
+        <div class="form-container">
+            <form id="serviceCallForm">
+                <div class="form-group">
+                    <label for="customerName">Customer Name *</label>
+                    <input type="text" id="customerName" name="customerName" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="customerEmail">Email Address *</label>
+                    <input type="email" id="customerEmail" name="customerEmail" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="contactNumber">Contact Number *</label>
+                    <input type="tel" id="contactNumber" name="contactNumber" placeholder="+91 00000 00000" required>
+                </div>
+                <div class="form-group">
+                    <label for="customerLocation">Location *</label>
+                    <input type="text" id="customerLocation" name="customerLocation" placeholder="Your city / area" required>
+                </div>
+                <div class="form-group">
+                    <label for="issueDescription">Describe Your Issue *</label>
+                    <textarea id="issueDescription" name="issueDescription" placeholder="Please describe the problem you're experiencing..." required></textarea>
+                </div>
+                <button type="submit" class="submit-btn" id="serviceSubmitBtn">Send Message</button>
+                <div class="form-message" id="formMessage"></div>
+            </form>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact" id="contact">
+        <div class="section-header">
+            <span class="section-tag">GET IN TOUCH</span>
+            <h2>Let's Build Something Great</h2>
+            <p>Ready to upgrade your printing and IT infrastructure? Contact us today</p>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-info">
+                <h3>Contact Information</h3>
+                <div class="contact-item">
+                    <span class="contact-item-icon">📍</span>
+                    <div>
+                        <h4>Our Location</h4>
+                        <p>299 (Basement) Mandir Marg,<br>Mahaveer Nagar, Durgapura<br>Jaipur - 302018</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-item-icon">📞</span>
+                    <div>
+                        <h4>Phone</h4>
+                        <a href="tel:+917891010104">+91 78910 10104</a>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-item-icon">✉️</span>
+                    <div>
+                        <h4>Email</h4>
+                        <a href="/cdn-cgi/l/email-protection#790a0c0909160b0d391c1a111c151b1c1c571017"><span class="__cf_email__" data-cfemail="3f4c4a4f4f504d4b7f5a5c575a535d5a5a115651">[email&#160;protected]</span></a>
+                    </div>
+                </div>
+            </div>
+            <div class="contact-form">
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label for="contactName">Your Name</label>
+                        <input type="text" id="contactName" name="name" placeholder="Enter your name">
+                    </div>
+                    <div class="form-group">
+                        <label for="contactEmail">Email Address</label>
+                        <input type="email" id="contactEmail" name="email" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="contactPhone">Phone Number</label>
+                        <input type="tel" id="contactPhone" name="phone" placeholder="+91 00000 00000">
+                    </div>
+                    <div class="form-group">
+                        <label for="contactMessage">Message</label>
+                        <textarea id="contactMessage" name="message" placeholder="Tell us about your requirements..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn" id="contactSubmitBtn">Send Message</button>
+                    <div class="form-message" id="contactFormMessage"></div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="footer-logo">
+                    <img src="images/echelbee-logo.jpg" alt="Ech El Bee Pixel 2 Paper" style="height:60px; width:auto; object-fit:contain; filter: brightness(0) invert(1);">
+                </div>
+                <p>Your trusted partner for advanced printing solutions and end-to-end IT infrastructure services. Delivering reliable, efficient, and future-ready technology for modern businesses.</p>
+            </div>
+            <div>
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#why-us">Why Us</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Services</h4>
+                <ul>
+                    <li><a href="#services">Printing Solutions</a></li>
+                    <li><a href="#services">IT Infrastructure</a></li>
+                    <li><a href="#services">Support & AMC</a></li>
+                    <li><a href="#services">Network Solutions</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 ECH EL BEE PIXEL 2 PAPER. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Tab switching function for products
+        window.switchTab = function(tabName, btn) {
+            var tabContents = document.querySelectorAll('.tab-content-wrapper');
+            for (var i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            var tabButtons = document.querySelectorAll('.tab-button');
+            for (var j = 0; j < tabButtons.length; j++) {
+                tabButtons[j].classList.remove('active');
+            }
+            var target = document.getElementById(tabName);
+            if (target) target.classList.add('active');
+            if (btn) btn.classList.add('active');
+        };
+
+        // Service Call Form Handler
+        document.getElementById('serviceCallForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('serviceSubmitBtn');
+            const formMessage = document.getElementById('formMessage');
+            const formData = new FormData();
+            formData.append('form_type', 'service_call');
+            formData.append('customerName', document.getElementById('customerName').value);
+            formData.append('customerEmail', document.getElementById('customerEmail').value);
+            formData.append('contactNumber', document.getElementById('contactNumber').value);
+            formData.append('customerLocation', document.getElementById('customerLocation').value);
+            formData.append('issueDescription', document.getElementById('issueDescription').value);
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            formMessage.style.display = 'none';
+            try {
+                const response = await fetch('send_email.php', { method: 'POST', body: formData });
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('Email system not configured. Please upload send_email.php to your server.');
+                    }
+                    throw new Error('Server error. Please contact support' + '@echelbee.in directly.');
+                }
+                const result = await response.json();
+                if (result.success) {
+                    formMessage.className = 'form-message success';
+                    formMessage.textContent = result.message;
+                    formMessage.style.display = 'block';
+                    document.getElementById('serviceCallForm').reset();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                formMessage.className = 'form-message error';
+                formMessage.textContent = error.message || 'An error occurred. Please contact us directly at support' + '@echelbee.in or call +91 78910 10104';
+                formMessage.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Message';
+            }
+        });
+
+        // Contact Form submission handler
+        document.getElementById('contactForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('contactSubmitBtn');
+            const formMessage = document.getElementById('contactFormMessage');
+            const formData = new FormData();
+            formData.append('form_type', 'contact');
+            formData.append('name', document.getElementById('contactName').value);
+            formData.append('email', document.getElementById('contactEmail').value);
+            formData.append('phone', document.getElementById('contactPhone').value);
+            formData.append('message', document.getElementById('contactMessage').value);
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            formMessage.style.display = 'none';
+            try {
+                const response = await fetch('send_email.php', { method: 'POST', body: formData });
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('Email system not configured. Please upload send_email.php to your server.');
+                    }
+                    throw new Error('Server error. Please contact support' + '@echelbee.in directly.');
+                }
+                const result = await response.json();
+                if (result.success) {
+                    formMessage.className = 'form-message success';
+                    formMessage.textContent = result.message;
+                    formMessage.style.display = 'block';
+                    document.getElementById('contactForm').reset();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                formMessage.className = 'form-message error';
+                formMessage.textContent = error.message || 'An error occurred. Please contact us directly at support' + '@echelbee.in or call +91 78910 10104';
+                formMessage.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Message';
+            }
+        });
+
+        // Add scroll effect to navigation
+        window.addEventListener('scroll', function() {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 20) {
+                nav.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)';
+            } else {
+                nav.style.boxShadow = 'none';
+            }
+        });
+    </script>
