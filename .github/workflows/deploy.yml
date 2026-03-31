@@ -14,6 +14,25 @@ jobs:
       uses: appleboy/ssh-action@v0.1.6
       with:
         host: ${{ secrets.HOST }}
+        username
+clear
+mkdir -p .github/workflows && cat <<EOF > .github/workflows/deploy.yml
+name: Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy via SSH (Legacy Fix)
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
         password: ${{ secrets.PASSWORD }}
         port: 22
@@ -21,4 +40,4 @@ jobs:
           cd /home3/echela83/public_html
           git reset --hard
           git pull origin main
-        insecure_cipher: true
+        use_insecure_cipher: true
